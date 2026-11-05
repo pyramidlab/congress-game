@@ -1,0 +1,32 @@
+name: Check game
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm ci --prefix functions
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:budget
+      - run: npx firebase emulators:exec --project demo-congress --only database "npx tsx --test tests/rules.integration.ts && npm run loadtest"
+      - run: npx firebase emulators:exec --project demo-congress --only auth,database,functions,storage "npm run test:functions"
+        env:
+          DATABASE_URL: https://demo-congress-default-rtdb.firebaseio.com
+          FUNCTIONS_DISCOVERY_TIMEOUT: 60
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-loadtest
+          path: test-results/
+          if-no-files-found: ignore

@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {gzipSync} from 'node:zlib';
+const html=fs.readFileSync('.next/server/app/join.html','utf8');
+const assets=[...new Set([...html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]))];
+if(!assets.length)throw new Error('Could not find player assets in the generated page.');
+const rows=assets.map(url=>{const file=path.join('.next',url.replace('/_next/',''));const data=fs.readFileSync(file);return {asset:url,raw:data.length,gzip:gzipSync(data).length};});
+const gzip=gzipSync(html).length+rows.reduce((sum,r)=>sum+r.gzip,0),raw=Buffer.byteLength(html)+rows.reduce((sum,r)=>sum+r.raw,0);
+console.log(JSON.stringify({page:'/join',assets:rows.length,gzipBytes:gzip,rawBytes:raw,targetGzipBytes:500*1024,passed:gzip<500*1024},null,2));
+if(gzip>=500*1024)process.exitCode=1;

@@ -3,19 +3,107 @@
     ".read": false,
     ".write": false,
     "games": {
-      "$code": {
-        "public": {
-          ".read": "auth != null"
-        },
-        "players": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true"
+      }
+    },
+    "names": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true"
+      }
+    },
+    "locks": {
+      ".read": false,
+      ".write": false
+    },
+    "members": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+    "sessions": {
+      "$pin": {
+        ".read": "auth != null"
+      }
+    },
+    "results": {
+      "$pin": {
+        "$uid": {
+          ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true)"
+        }
+      }
+    },
+    "progress": {
+      "$pin": {
+        ".read": "auth != null"
+      }
+    },
+    "answers": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true",
+        "$attempt": {
           "$uid": {
-            ".read": "auth != null && auth.uid === $uid"
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('members').child($pin).child($uid).exists() && root.child('members').child($pin).child($uid).child('removed').val() !== true && root.child('games').child($pin).child('phase').val() === 'question' && root.child('games').child($pin).child('round').child('attempt').val() === $attempt && now <= root.child('games').child($pin).child('round').child('endsAt').val()",
+            ".validate": "newData.hasChildren(['option','receivedAt','attempt','pausedMs'])",
+            "option": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3 && newData.val() % 1 === 0"
+            },
+            "receivedAt": {
+              ".validate": "newData.isNumber() && newData.val() === now"
+            },
+            "attempt": {
+              ".validate": "newData.val() === $attempt"
+            },
+            "pausedMs": {
+              ".validate": "newData.val() === root.child('games').child($pin).child('round').child('pausedMs').val()"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         }
       }
     },
+    "presence": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && root.child('members').child($pin).child($uid).exists()",
+          ".validate": "newData.hasChildren(['online','at'])",
+          "online": {
+            ".validate": "newData.isBoolean()"
+          },
+          "at": {
+            ".validate": "newData.isNumber() && newData.val() === now"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "backups": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true"
+      }
+    },
+    "scheduler": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true"
+      }
+    },
     "hosts": {
       "$uid": {
+        ".read": "auth != null && auth.token.admin === true && auth.uid === $uid",
+        "templates": {
+          ".indexOn": [
+            "createdAt"
+          ]
+        },
         "rooms": {
           ".indexOn": [
             "createdAt"

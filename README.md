@@ -1,137 +1,58 @@
 # Congress Game
 
-An online, real-time quiz and survey tournament for up to 200 players in one room. Players join through a QR code or six-digit code, use a persistent anonymous Firebase identity, and receive live round updates. Host accounts create and control games; a separate display view is designed for a projector.
+A phone quiz and on-stage survey tournament for a congress gathering. The host, projector and players have separate screens. Built with Next.js, Firebase Auth, Realtime Database, Cloud Functions and Cloud Storage; deploy the frontend to Vercel.
 
-This implementation follows the **online / weak internet** direction. It is not a fully offline LAN server. A brief dropout preserves identity and confirmed answers, and unconfirmed answers retry while their round remains open. Answers that reach the server after the deadline receive no credit.
+## Try it locally
 
-## Stack
-
-- Next.js App Router, React, TypeScript, plain responsive CSS
-- Firebase Authentication: anonymous players and email/password hosts
-- Firebase Realtime Database: live public game state and private player records
-- Next.js server routes with Firebase Admin: trusted authorisation, scoring and game control
-- QR codes generated locally in the browser; no external QR service or font dependency
-
-The Next.js server routes replace the initially proposed Cloud Functions for this MVP. Deploy Next.js to a Node-capable host. Do not use a static export.
-
-## Run locally
-
-Install Node.js 22 or newer, then:
+Use Node.js 22 and npm. Install the frontend and backend dependencies separately:
 
 ```sh
 npm ci
-cp .env.example .env.local
+npm ci --prefix functions
 npm run dev
 ```
 
-Open http://localhost:3000. The home page and setup screens work before Firebase is configured. Live rooms require the following setup.
+Open `http://localhost:3000/host?demo=1&pin=482913`. The demo uses sample players and questions, with shared state across tabs in the same browser. Open the projector from the host screen, and `/join?demo=1&pin=482913` for the phone view. Demo data lives in browser storage; live mode uses Firebase. No Firebase account is needed for the demo.
 
-## Firebase setup
+Routes: `/` welcome, `/host` administrator, `/join` player, `/display` projector, `/offline-board.html` standalone survey fallback.
 
-1. Create a Firebase project and register a Web app.
-2. Enable **Authentication → Anonymous** and **Email/Password** providers.
-3. Create a **Realtime Database** (not Firestore). Copy its exact URL.
-4. Copy the Web app config into the five `NEXT_PUBLIC_FIREBASE_*` variables in `.env.local`.
-5. Create the host user in Firebase Authentication. Copy its UID into `HOST_UIDS`. Multiple authorised UIDs are separated by commas. Each room can be controlled only by its creator.
-6. Generate a service account in Project settings → Service accounts. Put its entire JSON on one line into `FIREBASE_SERVICE_ACCOUNT` on the server. In `.env.local`, wrap the JSON in single quotes. Never place it in a public variable or commit it.
-7. Publish `database.rules.json` through the Realtime Database rules editor. Alternatively, install the Firebase CLI, select your project, and run `firebase deploy --only database`.
-8. Add your deployed domain to Firebase Authentication's authorised domains. Add `localhost` for development if it is not already present.
-9. Restart the development server after changing environment variables. On hosted deployments, set every variable and rebuild, because public configuration is embedded during the build.
+## Connect a real event
 
-Do not send service account keys through chat. Configure them directly in your development environment or hosting dashboard.
+Follow [Firebase and Vercel setup](docs/SETUP.md), then [the operator runbook](docs/RUNBOOK.md). Copy `.env.example` to `.env.local` for local live testing. Public Firebase web configuration belongs in these variables; service account keys and host passwords do not.
 
-### Environment variables
+The quiz questions are samples and must be replaced by the organisers. All eight starter surveys and campuses are editable before starting a session. Once started, content is locked for that session. Create a new game to use another content set.
 
-| Variable | Where to find it | Visibility |
-| --- | --- | --- |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Web app configuration | Public |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Web app configuration | Public |
-| `NEXT_PUBLIC_FIREBASE_DATABASE_URL` | Realtime Database console | Public |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Web app configuration | Public |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | Web app configuration | Public |
-| `HOST_UIDS` | Authentication → Users → host UID | Server only |
-| `FIREBASE_SERVICE_ACCOUNT` | Service account JSON | Server only; secret |
+Hosts can save complete question sets to an account library, reopen recent games, reuse their content, and import/export question sets as JSON. CSV question import remains available. Password recovery uses Firebase email reset links. Players can review their own completed quiz after the results are announced.
 
-## Play a game
+## Weak connections and caching
 
-1. The host opens `/host` and signs in.
-2. Edit the sample rounds or create new ones. Each round supports 2–4 options in the API; the editor supports adding and removing options. Choose a scored quiz or an unscored survey, select the correct answer for quizzes, and set a 10–180 second limit.
-3. Open the room. Share its join link, six-digit code or QR code.
-4. Open the big-screen display in a second tab and project it.
-5. Players open `/play`, enter their name and game code, and wait in the lobby.
-6. Start once everyone is ready. The clock uses the server deadline; each player can submit one answer per round.
-7. After the clock ends, the open host tab reveals the results automatically. A connected player can also trigger the server-controlled reveal if the host is disconnected. The host chooses when to advance.
-8. After the final round, export scores, choices and per-round points as CSV.
+- A compact public session stream contains the current question, top ten and campus board. Players subscribe to their own answer and result, rather than downloading everybody's answers.
+- The countdown renders locally from a server deadline and time offset. It does not broadcast every second.
+- Answer writes use a Firebase server timestamp. Rules enforce the current attempt, deadline, active membership and one answer. The phone shows **Sending** until the server acknowledges the write, then **Answer locked in**.
+- The browser retains the player's Firebase identity. Refreshing or reconnecting restores membership and results. A pending choice can retry only for the same question attempt; an expired answer is rejected. Clearing browser storage or using another browser loses the identity.
+- Next.js fingerprinted assets use normal long-lived browser/CDN caching. Live game and answer data stay in Realtime Database. No service worker caches game state. First load and quiz answer acceptance still require connectivity.
+- Download the offline board before arriving. The host download embeds the current survey library. It needs no network, packages, fonts or external images and keeps match state locally. Offline scores are a separate fallback and do not sync into the online tournament.
 
-Keep the host control room open to advance rounds. If it disconnects, the deadline still closes answers and connected player browsers can trigger the results reveal. If everyone is disconnected, the reveal waits until a host or player reconnects. Refreshing or reopening a room in the same browser resumes it; a host can also reopen a six-digit room from the editor. A player who refreshes uses their existing identity and answers. Clearing browser data or changing browsers creates a new player identity.
+## Authority and privacy
 
-## Scoring and integrity
+Scoring and state transitions run in Cloud Functions. Raw answer receipt time comes from Realtime Database, so a cold callable function does not add to a player's answer time. Paused time is excluded. Scores derive from non-voided rounds; replaying voids the old attempt. Ranking uses points, total correct-answer time, then join time. Campus totals use the best five by default.
 
-- Correct quiz answer: 500–1,000 points, based on **server receipt time**.
-- Wrong answer or survey: zero points.
-- Ties share competition ranks (1, 1, 3).
-- Private questions never appear in public game state before their round; the correct choice is published at reveal.
-- Answer retries are idempotent. Player score and answer are committed in one per-player database transaction, avoiding one shared transaction for all 200 answers.
-- Database client writes are denied. Players may read public room state and their own record. Host operations check an allowlisted identity and room ownership on the server.
-- Joining is capped by an atomic 200-member roster. New players must join in the lobby; returning players can resume after play starts.
+Private questions, correct answers, raw submissions, backups and host state are denied to ordinary players. Only the current question's public fields are projected; its correct option appears at reveal. Host functions require the `admin` custom claim and production App Check. Rules deny client score and game-state writes. A six-digit PIN identifies a public game; it is not a host credential.
 
-## Connection behaviour
+Question deadlines reject late writes even if automatic reveal is delayed. Cloud Tasks closes a question automatically; the host also has a manual reveal button and a visible scheduler error. Results persist after every reveal and automatic CSV/JSON backups are saved at podium, winner and end.
 
-Realtime Database reconnects automatically. The UI shows connection status and uses Firebase's server time offset for countdowns. A selected answer is stored on that device and retried if confirmation is interrupted; retrying does not change the original recorded choice or add points twice. New answer buttons are disabled while disconnected. Reconnection cannot extend a round deadline. Host drafts are saved in browser storage. Validated question sets can also be saved to the host account and reused on another device.
-
-This improves resilience to short interruptions. It cannot guarantee uninterrupted play with no internet, and the webpage must first load online. Anonymous authentication and Realtime Database both depend on Firebase availability.
-
-## Checks and remaining validation
+## Checks
 
 ```sh
-npm test
 npm run typecheck
+npm test
 npm run build
+npm run check:budget
+npm run test:rules
 ```
 
-Automated checks cover scoring, validation, ranking, repeated submissions and deadline enforcement. The application builds without Firebase credentials. Full live Firebase tests, database rule checks, reconnect trials and a 200-device/simulated-player load test must run against your configured project before a real event. Check Firebase authentication quotas and the hosting plan before putting 200 people on one venue network. This is a 200-player capacity target, not a measured production throughput claim.
+With a local database emulator already running, run `npm run loadtest`. It simulates 200 players, ten rounds and 40 clients reconnecting in round five. It writes `test-results/loadtest.json`. This checks local database rules, receipt and ranking; it does not measure production Functions, mobile browsers, venue Wi-Fi or geographic latency. See [verification notes](docs/VERIFICATION.md) for the delivery evidence and remaining rehearsal steps.
 
-No production Firebase connection or deployment is included in the repository. Configure the project first; then verify host → join → start → answer → reveal → advance → export, including duplicate submissions and interrupted connections.
+The GitHub workflow installs both packages and repeats the build, type, engine, rule and local load checks. Use `npm run emulators` for a full local backend rehearsal; task scheduling is bypassed in the emulator, so reveal manually.
 
-## Host tools
-
-- Import and export question sets as JSON. Export the sample draft to see the supported shape; either an array of questions or `{ "title": "…", "questions": […] }` is accepted. Import validates every prompt, option, correct answer and time limit before replacing the draft.
-- Add/remove options (2–4 per round) and move rounds up or down.
-- Save question sets to your host account, load them later or delete them without changing existing games.
-- Open recent rooms from the game library, reuse a room’s question set, and download a finished room’s CSV. New history entries are recorded by this implementation; older rooms can still be reopened by code.
-- Request a password reset from the sign-in screen. Account creation and host authorisation remain in the Firebase console.
-- Players can review each completed round after a game ends. Future/unplayed rounds are excluded.
-
-## Local integration harness
-
-With Node.js 22 and Java 17 installed, run `npm run test:integration`. This downloads a pinned Firebase CLI and starts local Auth and Realtime Database emulators with a demo project. The harness never targets a live Firebase project.
-
-It checks room ownership, player authorisation, the 200-player admission cap, 200 simultaneous answer requests, duplicate retries, deadline rejection, surveys, automatic reveal, final review, exports, rejoining, room history and database isolation. It starts its own production server on port 3105; emulator ports 9000 and 9099 must be free.
-
-**Current verification limit:** the harness was attempted here but timed out on the database connection before reaching the player load check. This environment’s Firebase server SDK routes WebSocket connections through its configured proxy, including local emulator requests. No 200-player throughput result is claimed. Run the harness on a normal local development machine, then verify the deployed project on the event network.
-
-GitHub CI is configured to run unit tests, TypeScript checks and the production build without requiring Firebase credentials. Live Firebase integration and venue connectivity remain separate acceptance checks.
-
-## Vercel copy-and-paste setup
-
-Open the `congress-game` project → Settings → Environment Variables. The app uses exactly these seven variables:
-
-```dotenv
-NEXT_PUBLIC_FIREBASE_API_KEY=REPLACE_WITH_FIREBASE_WEB_API_KEY
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=REPLACE_WITH_FIREBASE_AUTH_DOMAIN
-NEXT_PUBLIC_FIREBASE_DATABASE_URL=REPLACE_WITH_EXACT_REALTIME_DATABASE_URL
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=REPLACE_WITH_FIREBASE_PROJECT_ID
-NEXT_PUBLIC_FIREBASE_APP_ID=REPLACE_WITH_FIREBASE_WEB_APP_ID
-HOST_UIDS=REPLACE_WITH_HOST_AUTHENTICATION_UID
-FIREBASE_SERVICE_ACCOUNT=REPLACE_WITH_ENTIRE_SERVICE_ACCOUNT_JSON
-```
-
-These are placeholders, not working credentials. Use the first five values from the Firebase Web app configuration and Realtime Database console. `HOST_UIDS` is the UID of the email/password host account you create in Authentication, not the email address or project ID.
-
-Add `FIREBASE_SERVICE_ACCOUNT` separately if you import the other variables in bulk: paste the entire downloaded JSON file into its value field, including its outer braces. Keep `\n` escapes in the private key as downloaded. In Vercel's individual value field, do **not** add surrounding single quotes, a variable name, or Markdown fences. Mark this variable Secret/Sensitive. It is used only by server routes.
-
-Select the Production environment for the production site. Add matching configuration to Preview if you want branch previews to connect; a separate test Firebase project is preferable for testing. Development is optional for local work. No email, payment, storage bucket or messaging sender variable is required for this MVP.
-
-After adding the variables, redeploy so Next.js rebuilds its browser configuration. Enable Anonymous and Email/Password authentication, publish `database.rules.json`, and add the actual Vercel hostname to Firebase Authentication's authorised domains. `/api/health` reports missing variable names without revealing values; `configured` means the required settings are present, not that a live game has passed verification.
-
-Vercel settings: Next.js framework, repository root, Node.js 22.x, `npm ci`, and `npm run build`. Keep the default Next.js output directory.
+With the full emulators running, `npm run test:functions` checks the real Auth/callable/Database flow, saved sets, player reviews, team pairing, survey operations and exports with eight players. This is separate from the 200-client database load test.

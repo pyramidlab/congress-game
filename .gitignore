@@ -2,7 +2,12 @@ node_modules/
 .next/
 .env*
 !.env.example
-*.tsbuildinfo
-
-*-debug.log
+functions/lib/
+*-debug.log*
 .firebase/
+.vercel/
+coverage/
+test-results/
+*.tsbuildinfo
+service-account*.json
+firebase-adminsdk*.json
