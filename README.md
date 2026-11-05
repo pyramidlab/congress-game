@@ -111,3 +111,27 @@ It checks room ownership, player authorisation, the 200-player admission cap, 20
 **Current verification limit:** the harness was attempted here but timed out on the database connection before reaching the player load check. This environment’s Firebase server SDK routes WebSocket connections through its configured proxy, including local emulator requests. No 200-player throughput result is claimed. Run the harness on a normal local development machine, then verify the deployed project on the event network.
 
 GitHub CI is configured to run unit tests, TypeScript checks and the production build without requiring Firebase credentials. Live Firebase integration and venue connectivity remain separate acceptance checks.
+
+## Vercel copy-and-paste setup
+
+Open the `congress-game` project → Settings → Environment Variables. The app uses exactly these seven variables:
+
+```dotenv
+NEXT_PUBLIC_FIREBASE_API_KEY=REPLACE_WITH_FIREBASE_WEB_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=REPLACE_WITH_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_DATABASE_URL=REPLACE_WITH_EXACT_REALTIME_DATABASE_URL
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=REPLACE_WITH_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_APP_ID=REPLACE_WITH_FIREBASE_WEB_APP_ID
+HOST_UIDS=REPLACE_WITH_HOST_AUTHENTICATION_UID
+FIREBASE_SERVICE_ACCOUNT=REPLACE_WITH_ENTIRE_SERVICE_ACCOUNT_JSON
+```
+
+These are placeholders, not working credentials. Use the first five values from the Firebase Web app configuration and Realtime Database console. `HOST_UIDS` is the UID of the email/password host account you create in Authentication, not the email address or project ID.
+
+Add `FIREBASE_SERVICE_ACCOUNT` separately if you import the other variables in bulk: paste the entire downloaded JSON file into its value field, including its outer braces. Keep `\n` escapes in the private key as downloaded. In Vercel's individual value field, do **not** add surrounding single quotes, a variable name, or Markdown fences. Mark this variable Secret/Sensitive. It is used only by server routes.
+
+Select the Production environment for the production site. Add matching configuration to Preview if you want branch previews to connect; a separate test Firebase project is preferable for testing. Development is optional for local work. No email, payment, storage bucket or messaging sender variable is required for this MVP.
+
+After adding the variables, redeploy so Next.js rebuilds its browser configuration. Enable Anonymous and Email/Password authentication, publish `database.rules.json`, and add the actual Vercel hostname to Firebase Authentication's authorised domains. `/api/health` reports missing variable names without revealing values; `configured` means the required settings are present, not that a live game has passed verification.
+
+Vercel settings: Next.js framework, repository root, Node.js 22.x, `npm ci`, and `npm run build`. Keep the default Next.js output directory.
