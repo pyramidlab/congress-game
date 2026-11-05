@@ -1,4 +1,5 @@
 import type {Game, Question, Survey} from './types';
+import {event} from '../event';
 export const campuses = ['EKSU','FUOYE','FEDPOLAD','BOUESTI','FUTES-IYIN','FCE-ILAWE','COHS-IJERO','ABUAD'];
 const raw: [string, string[], number][] = [
  ['Practice: which colour is the sky on a clear day?', ['Blue','Orange','Purple','Green'],0],
@@ -25,6 +26,6 @@ const surveyRaw: [string, [string,number][]][] = [
  ['Name something people forget when travelling to a congress.', [['Charger',30],['Toiletries or towel',25],['Extra clothes',18],['Bedsheet',12],['Cash',9],['Footwear or sandals',6]]]
 ];
 export const surveys: Survey[] = surveyRaw.map(([question,answers],i)=>({id:'survey-'+i,question,answers:answers.map(([text,points])=>({text,points,accept:''}))}));
-export function newGame(pin:string,name='Ekiti Area Congress'):Game {
- return {pin,name,theme:'One gathering. Every campus. Let’s play.',revision:0,phase:'lobby',campuses:[...campuses],questions:structuredClone(questions),surveys:structuredClone(surveys),campusTop:5,scoring:'speed',allowLate:false,index:-1,rounds:[],teams:[],audit:[],undo:[],feud:{match:0,survey:0,revealed:[],strikes:0,controlling:0,multiplier:1,awarded:false,matches:[{a:1,b:4,scores:[0,0]},{a:2,b:3,scores:[0,0]},{a:0,b:0,scores:[0,0]}],used:[],suddenDeath:false}};
+export function newGame(pin:string,name:string=event.name):Game {
+ return {pin,name,theme:event.theme,revision:0,phase:'lobby',campuses:[...campuses],questions:structuredClone(questions),surveys:structuredClone(surveys),campusTop:5,scoring:'speed',allowLate:false,index:-1,rounds:[],teams:[],audit:[],undo:[],feud:{match:0,survey:0,revealed:[],strikes:0,controlling:0,multiplier:1,awarded:false,matches:[{a:1,b:4,scores:[0,0]},{a:2,b:3,scores:[0,0]},{a:0,b:0,scores:[0,0]}],used:[],suddenDeath:false}};
 }

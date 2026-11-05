@@ -2,6 +2,7 @@ import 'server-only';
 import {createHash,randomInt,randomUUID} from 'node:crypto';
 import {adminServices} from './admin';
 import {isHost} from '../host-access';
+import {event} from '../event';
 import {newGame} from '../core/seed';
 import {hydrate,project,rank,transition,username,validateContent,clean} from '../core/engine';
 import {exportsFor} from '../core/export';
@@ -88,7 +89,7 @@ export async function createGame(r:ServiceRequest){
   if(r.data?.sourcePin){source=(await db.ref('games/'+pinOf(r.data.sourcePin)).get()).val();if(!source)throw new Error('Game not found.');}
   const content=source?validateContent(source):undefined;
   for(let i=0;i<10;i++){
-   const pin=String(randomInt(100000,1000000)),g=newGame(pin,String(r.data?.name??'Ekiti Area Congress'));
+   const pin=String(randomInt(100000,1000000)),g=newGame(pin,String(r.data?.name??event.name));
    if(content)Object.assign(g,content);
    g.createdBy=uid;g.createdAt=Date.now();
    const result=await db.ref('games/'+pin).transaction(v=>v?undefined:g);

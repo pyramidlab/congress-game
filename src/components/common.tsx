@@ -1,9 +1,8 @@
 'use client';
 import {useEffect,useState} from 'react';
-import Link from 'next/link';
+export {Brand} from './brand';
 import type {PublicGame,Standing,CampusStanding} from '@/lib/types';
 export const shapes=['▲','◆','●','■'];
-export function Brand(){return <Link className="brand" href="/"><span className="brandmark">✳</span><span>CONGRESS<span className="brand-sub">GAME SESSION</span></span></Link>;}
 export function Connection({connected,demo=false}:{connected:boolean;demo?:boolean}){return <span className={'connection '+(connected?'online':'offline')} role="status"><span className="dot"/>{demo?'Local demo':connected?'Connected':'Reconnecting…'}</span>;}
 export function DemoBanner(){return <div className="demo-banner">DEMO STUDIO <span>Sample players and questions · Changes stay in this browser</span></div>;}
 export function QR({url}:{url:string}){const [src,setSrc]=useState('');useEffect(()=>{let live=true;import('qrcode').then(q=>q.toDataURL(url,{width:240,margin:2,color:{dark:'#111b2d',light:'#ffffff'}})).then(s=>{if(live)setSrc(s);});return()=>{live=false;};},[url]);return <div className="qr">{src?<img src={src} width="200" height="200" alt="Scan to join this game"/>:<span>Preparing QR…</span>}</div>;}

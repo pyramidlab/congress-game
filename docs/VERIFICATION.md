@@ -10,9 +10,13 @@ The final architecture is phone/host/projector → Next.js server routes on Verc
 | Actual server API flow | Passed | Local Auth → Next.js API → Database with eight players; duplicate/unauthorized rejection, saved sets/history, protected questions, practice/scored reveal, deadline sync, identity restoration, reviews, team pairing, survey undo, CSV and three-file backup archive |
 | Database load | Passed | 200 clients, ten rounds, 2,000/2,000 accepted answers, 40 forced reconnects in round five and 200 unique ranks |
 | Local load timings | Recorded | 12,663 ms total, 377 ms median and 928 ms p95 submission receipt, including the forced 800 ms disconnect |
-| Initial player transfer | Passed | About 274 KB gzip, below the 500 KB target; excludes optional question images and later downloads |
+| Initial player transfer | Passed | 280,621 bytes including the 5,282-byte event logo, below the 500 KB target; excludes optional question images and later downloads |
 | Browser demo | Passed | Inspected host and 390 × 844 phone layout; start, answer, score and refresh recovery |
 | Production Firebase setup | Applied | Database rules published; Anonymous and Email/Password enabled; operator UID verified; production hostname authorised |
+| Production base deployment | Passed | Vercel main deployment ready; landing and health endpoints return 200; required configuration is present and host authorization/game creation succeeded |
+| Event branding | Built | Supplied logo, optimized flier and event-specific welcome, player, host, projector and offline identity; TypeScript and 22 existing tests pass. Browser preview was declined, so this visual update has not been inspected in a browser |
+
+The production player-flow smoke check stopped on a network fetch failure after host verification. Full production join/answer/result/backup confirmation remains pending; the emulator integration results above are separate from that production check.
 
 The 200-client benchmark measures the local database/rules/receipt path, not production hosting, Auth account creation or venue Wi-Fi. The eight-player API test verifies the real server boundary separately. A 30-phone live deployment test, projector/sound check and venue rehearsal remain required.
 

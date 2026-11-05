@@ -1,6 +1,8 @@
-# Congress Game
+# AFCF Ekiti Area · Student Congress 1.0
 
-A phone quiz, campus competition and on-stage survey tournament built from the Congress brief. Separate host, phone and projector views use Next.js on Vercel with Firebase Authentication and Realtime Database.
+A phone quiz, campus competition and on-stage survey tournament for Apostolic Faith Campus Fellowship, Ekiti Area Student Congress 1.0, themed **Shine for a Purpose**. This site serves this specific event. Separate host, phone and projector views use Next.js on Vercel with Firebase Authentication and Realtime Database.
+
+The organizer's logo and flier are in `public/event/`; the event identity, dates and venue are in `src/lib/event.ts`. The phone join page downloads only the 5 KB logo. The 75 KB flier loads lazily on the welcome page.
 
 ## Run locally
 
@@ -8,7 +10,7 @@ Use Node.js 22. Run `npm ci`, then `npm run dev`. Open `http://localhost:3000/ho
 
 Routes: `/` welcome, `/host` administrator, `/join` phone, `/display` projector and `/offline-board.html` standalone fallback.
 
-## Connect an event
+## Connect the event's Firebase project
 
 Follow [setup](docs/SETUP.md) and [the operator runbook](docs/RUNBOOK.md). Copy `.env.example` to `.env.local` for local live play. Put server credentials only in `FIREBASE_SERVICE_ACCOUNT`; public web configuration uses `NEXT_PUBLIC_` variables. Host access is controlled by `HOST_UIDS`.
 
