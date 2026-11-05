@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {newGame} from '../functions/src/seed';
-import {project,transition} from '../functions/src/engine';
+import {newGame} from '../src/lib/core/seed';
+import {project,transition} from '../src/lib/core/engine';
 import {restoreGame,restorePublic} from '../src/lib/restore';
 test('a new Firebase lobby tolerates omitted empty collections',()=>{
  const g=newGame('123456');const {publicGame}=project(g,{},{});

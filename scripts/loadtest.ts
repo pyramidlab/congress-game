@@ -3,9 +3,9 @@ import {performance} from 'node:perf_hooks';
 import assert from 'node:assert/strict';
 import {initializeTestEnvironment} from '@firebase/rules-unit-testing';
 import {ref,set,get,serverTimestamp,goOffline,goOnline} from 'firebase/database';
-import {newGame} from '../functions/src/seed';
-import {project,rank,transition} from '../functions/src/engine';
-import type {AnswerMap,Player} from '../functions/src/types';
+import {newGame} from '../src/lib/core/seed';
+import {project,rank,transition} from '../src/lib/core/engine';
+import type {AnswerMap,Player} from '../src/lib/core/types';
 async function main(){
  if(process.env.LOADTEST_PRODUCTION==='true')throw new Error('This runner only targets the local Firebase emulator.');
  const count=Number(process.env.LOADTEST_PLAYERS)||200,pin='987654';

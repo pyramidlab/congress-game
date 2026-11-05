@@ -1,1 +1,1 @@
-export type * from '../../functions/src/types';
+export type * from './core/types';

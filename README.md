@@ -1,58 +1,47 @@
 # Congress Game
 
-A phone quiz and on-stage survey tournament for a congress gathering. The host, projector and players have separate screens. Built with Next.js, Firebase Auth, Realtime Database, Cloud Functions and Cloud Storage; deploy the frontend to Vercel.
+A phone quiz, campus competition and on-stage survey tournament built from the Congress brief. Separate host, phone and projector views use Next.js on Vercel with Firebase Authentication and Realtime Database.
 
-## Try it locally
+## Run locally
 
-Use Node.js 22 and npm. Install the frontend and backend dependencies separately:
+Use Node.js 22. Run `npm ci`, then `npm run dev`. Open `http://localhost:3000/host?demo=1&pin=482913` to explore without Firebase. Demo tabs share state only in the same browser.
 
-```sh
-npm ci
-npm ci --prefix functions
-npm run dev
-```
+Routes: `/` welcome, `/host` administrator, `/join` phone, `/display` projector and `/offline-board.html` standalone fallback.
 
-Open `http://localhost:3000/host?demo=1&pin=482913`. The demo uses sample players and questions, with shared state across tabs in the same browser. Open the projector from the host screen, and `/join?demo=1&pin=482913` for the phone view. Demo data lives in browser storage; live mode uses Firebase. No Firebase account is needed for the demo.
+## Connect an event
 
-Routes: `/` welcome, `/host` administrator, `/join` player, `/display` projector, `/offline-board.html` standalone survey fallback.
+Follow [setup](docs/SETUP.md) and [the operator runbook](docs/RUNBOOK.md). Copy `.env.example` to `.env.local` for local live play. Put server credentials only in `FIREBASE_SERVICE_ACCOUNT`; public web configuration uses `NEXT_PUBLIC_` variables. Host access is controlled by `HOST_UIDS`.
 
-## Connect a real event
+The app runs trusted server routes on Vercel. Firebase Functions and Firebase CLI sign-in are not required. Questions, scores, timers and tournament changes are validated on the server. Players' answer writes use Firebase server timestamps and strict database rules, so Vercel cold starts do not add to answer time.
 
-Follow [Firebase and Vercel setup](docs/SETUP.md), then [the operator runbook](docs/RUNBOOK.md). Copy `.env.example` to `.env.local` for local live testing. Public Firebase web configuration belongs in these variables; service account keys and host passwords do not.
+## Features
 
-The quiz questions are samples and must be replaced by the organisers. All eight starter surveys and campuses are editable before starting a session. Once started, content is locked for that session. Create a new game to use another content set.
+- Practice plus an editable quiz, correctness/speed scoring, individual and campus standings, server deadlines and first-answer-only receipt.
+- Pause, resume, replay without old points, skip, end, late joins, rename/remove players and automatic top-eight seeded pairings.
+- Four teams, two semi-finals and a three-survey final with answer flips, control, strikes, steals, multipliers, sudden death, score correction and undo.
+- Manual editing, CSV quiz import, complete JSON question-set import/export, private saved sets, room history, password recovery and completed-player reviews.
+- Player/campus CSV exports, automatic private CSV/JSON backup archives at quiz results/session end, and a downloadable offline survey board containing the session's edited surveys.
 
-Hosts can save complete question sets to an account library, reopen recent games, reuse their content, and import/export question sets as JSON. CSV question import remains available. Password recovery uses Firebase email reset links. Players can review their own completed quiz after the results are announced.
+Sample quiz questions must be replaced by the organisers. The eight starter surveys and campuses are editable before starting. Content is locked after the session starts; saved sets can create new sessions.
 
 ## Weak connections and caching
 
-- A compact public session stream contains the current question, top ten and campus board. Players subscribe to their own answer and result, rather than downloading everybody's answers.
-- The countdown renders locally from a server deadline and time offset. It does not broadcast every second.
-- Answer writes use a Firebase server timestamp. Rules enforce the current attempt, deadline, active membership and one answer. The phone shows **Sending** until the server acknowledges the write, then **Answer locked in**.
-- The browser retains the player's Firebase identity. Refreshing or reconnecting restores membership and results. A pending choice can retry only for the same question attempt; an expired answer is rejected. Clearing browser storage or using another browser loses the identity.
-- Next.js fingerprinted assets use normal long-lived browser/CDN caching. Live game and answer data stay in Realtime Database. No service worker caches game state. First load and quiz answer acceptance still require connectivity.
-- Download the offline board before arriving. The host download embeds the current survey library. It needs no network, packages, fonts or external images and keeps match state locally. Offline scores are a separate fallback and do not sync into the online tournament.
+The public stream contains the current question, top ten and campus standings. Phones subscribe to their own answer/result, rather than downloading everyone else's submissions. The countdown renders locally from a server deadline and time offset. Static Next.js assets use normal browser/CDN caching; live state is not cached by a service worker.
 
-## Authority and privacy
+An answer stays **Sending** until Firebase acknowledges it. Browser identity and a pending choice survive a refresh; a retry is accepted only for the same open attempt. A late reconnect never extends the deadline. Clearing browser data or changing browsers loses the anonymous identity.
 
-Scoring and state transitions run in Cloud Functions. Raw answer receipt time comes from Realtime Database, so a cold callable function does not add to a player's answer time. Paused time is excluded. Scores derive from non-voided rounds; replaying voids the old attempt. Ranking uses points, total correct-answer time, then join time. Campus totals use the best five by default.
+The host and projector request reveal at the deadline; player browsers provide a delayed fallback. The server checks the deadline and serialises the transition. If everyone disconnects, late answers are still rejected and reveal resumes on reconnect. Keep the host/display open for smooth transitions.
 
-Private questions, correct answers, raw submissions, backups and host state are denied to ordinary players. Only the current question's public fields are projected; its correct option appears at reveal. Host functions require the `admin` custom claim. App Check enforcement can be enabled after its domains and site key are configured. Rules deny client score and game-state writes. A six-digit PIN identifies a public game; it is not a host credential.
-
-Question deadlines reject late writes even if automatic reveal is delayed. Cloud Tasks closes a question automatically; the host also has a manual reveal button and a visible scheduler error. Results persist after every reveal and automatic CSV/JSON backups are saved at podium, winner and end.
+Download the offline HTML before the event and test it with connectivity disabled. It has no network, package, image or font dependencies. Its scores remain separate from the online bracket.
 
 ## Checks
 
-```sh
-npm run typecheck
-npm test
-npm run build
-npm run check:budget
-npm run test:rules
-```
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- `npm run check:budget`
+- `npm run test:rules` (requires Java 21+)
 
-With a local database emulator already running, run `npm run loadtest`. It simulates 200 players, ten rounds and 40 clients reconnecting in round five. It writes `test-results/loadtest.json`. This checks local database rules, receipt and ranking; it does not measure production Functions, mobile browsers, venue Wi-Fi or geographic latency. See [verification notes](docs/VERIFICATION.md) for the delivery evidence and remaining rehearsal steps.
+Run `npm run emulators`, then `npm run test:api` in another terminal to test real Auth → Next.js API → Database with eight players. The API runner starts a production server on port 3105 and uses only the demo project. Run `npm run loadtest` against the database emulator for 200 players, ten rounds and 40 reconnects. It writes `test-results/loadtest.json`.
 
-The GitHub workflow installs both packages and repeats the build, type, engine, rule and local load checks. Use `npm run emulators` for a full local backend rehearsal; task scheduling is bypassed in the emulator, so reveal manually.
-
-With the full emulators running, `npm run test:functions` checks the real Auth/callable/Database flow, saved sets, player reviews, team pairing, survey operations and exports with eight players. This is separate from the 200-client database load test.
+See [verification scope](docs/VERIFICATION.md). Emulator load results do not measure venue Wi-Fi or production throughput. A 30-phone deployment rehearsal remains necessary.

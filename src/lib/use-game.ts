@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {onValue,ref,set,serverTimestamp,onDisconnect,get} from 'firebase/database';
-import {httpsCallable} from 'firebase/functions';
+import {callable} from '@/lib/firebase';
 import {firebaseClient,configured} from './firebase';
 import {restoreGame,restorePublic} from './restore';
 import type {Game,Player,PlayerResult,PublicGame,Submission} from './types';
@@ -28,15 +28,37 @@ export function useGame(pin:string,demo:boolean,host=false){
     watch<Player>('members/'+pin+'/'+uid,member=>patch({member}));
     watch<PlayerResult>('results/'+pin+'/'+uid,result=>patch({result}));
     if(host){
-     const token=await c.auth.currentUser!.getIdTokenResult();if(!live)return;
-     if(token.claims.admin===true){watch<Game>('games/'+pin,privateGame=>patch({privateGame:privateGame?restoreGame(privateGame):null}));watch<Record<string,Player>>('members/'+pin,m=>patch({members:Object.values(m??{})}));watch<{ok:boolean;at:number}>('backups/'+pin,backup=>patch({backup}));watch<{ok:boolean}>('scheduler/'+pin,scheduler=>patch({scheduler}));}
-     else patch({error:'Sign in with a host account to control this game.'});
+     await callable('hostAccess')({});if(!live)return;
     }
    }).catch(e=>patch({error:e.message,loading:false}));
   }
   return()=>{live=false;stops.forEach(stop=>stop());};
  },[pin,demo,host,refresh]);
+
+ useEffect(()=>{
+  if(demo||!host||!view.game||!view.connected)return;let live=true;
+  callable<{pin:string},{game:Game;members:Player[];backup:GameView['backup']}>('hostState')({pin}).then(r=>{if(live)setView(v=>({...v,privateGame:restoreGame(r.data.game),members:r.data.members??[],backup:r.data.backup,error:''}));}).catch(()=>{});
+  return()=>{live=false;};
+ },[pin,demo,host,view.game?.revision,view.game?.playerCount,view.connected,refresh]);
  const attempt=view.game?.round?.attempt;
+ useEffect(()=>{
+  if(demo||!configured||!pin||view.game?.phase!=='question'||!view.connected)return;
+  let stopped=false,busy=false;
+  const tick=async()=>{
+   if(stopped||busy)return;busy=true;
+   try{
+    if(host)await callable('gameProgress')({pin});
+    const deadline=view.game?.round?.endsAt??Infinity;
+    const delay=host||!view.member?100:1800;
+    if(Date.now()+view.offset>=deadline+delay)await callable('syncGame')({pin});
+   }catch{}finally{busy=false;}
+  };
+  const deadline=view.game.round?.endsAt??Infinity;
+  const delay=host||!view.member?100:1800+Math.floor(Math.random()*1500);
+  const closeTimer=setTimeout(()=>{if(!stopped)void callable('syncGame')({pin}).catch(()=>{});},Math.max(0,deadline-(Date.now()+view.offset)+delay));
+  void tick();const interval=setInterval(()=>void tick(),host?2000:2000+Math.floor(Math.random()*1500));
+  return()=>{stopped=true;clearInterval(interval);clearTimeout(closeTimer);};
+ },[pin,demo,host,view.game?.phase,attempt,view.game?.round?.endsAt,view.connected,view.member?.uid,view.offset]);
  useEffect(()=>{
   if(demo||!configured||!attempt)return;let live=true;const stops:(()=>void)[]=[];
   setView(v=>({...v,submission:null,count:0}));
@@ -54,7 +76,7 @@ export function useGame(pin:string,demo:boolean,host=false){
  },[pin,demo,view.member?.uid,view.member?.removed]);
  const join=useCallback(async(name:string,campus:string)=>{
   if(demo){const d=await import('./demo');return d.demoJoin(name,campus);}
-  const c=await firebaseClient();await httpsCallable(c.fn,'joinGame')({pin,name,campus});
+  const c=await firebaseClient();await callable('joinGame')({pin,name,campus});
  },[pin,demo]);
  const answer=useCallback(async(option:number)=>{
   if(demo){const d=await import('./demo');return d.demoAnswer(option);}
@@ -70,7 +92,7 @@ export function useGame(pin:string,demo:boolean,host=false){
  },[pin,demo,view.game?.round]);
  const command=useCallback(async(action:string,payload:Record<string,unknown>={})=>{
   if(demo){const d=await import('./demo');return d.demoCommand(action,payload);}
-  const c=await firebaseClient();await httpsCallable(c.fn,'hostCommand')({pin,action,payload,revision:view.privateGame?.revision,requestId:crypto.randomUUID()});
+  const c=await firebaseClient();await callable('hostCommand')({pin,action,payload,revision:view.privateGame?.revision,requestId:crypto.randomUUID()});
  },[pin,demo,view.privateGame?.revision]);
  return {...view,join,answer,command,reconnect:()=>setRefresh(n=>n+1)};
 }

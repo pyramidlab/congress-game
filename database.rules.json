@@ -110,6 +110,11 @@
           ]
         }
       }
+    },
+    "backupFiles": {
+      "$pin": {
+        ".read": "auth != null && auth.token.admin === true"
+      }
     }
   }
 }

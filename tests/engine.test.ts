@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newGame} from '../functions/src/seed';
-import {points,rank,campusRanks,transition,project,username,validateContent} from '../functions/src/engine';
-import {exportsFor,csv} from '../functions/src/export';
-import type {Game,Player,AnswerMap,Standing} from '../functions/src/types';
+import {newGame} from '../src/lib/core/seed';
+import {points,rank,campusRanks,transition,project,username,validateContent} from '../src/lib/core/engine';
+import {exportsFor,csv} from '../src/lib/core/export';
+import type {Game,Player,AnswerMap,Standing} from '../src/lib/core/types';
 function game(){const g=newGame('123456');g.questions=[{id:'one',text:'Pick A',options:['A','B','C','D'],correct:0,seconds:20,points:1000}];return g;}
 const players:Record<string,Player>={a:{uid:'a',name:'Ada',campus:'EKSU',joinedAt:1},b:{uid:'b',name:'Ben',campus:'FUOYE',joinedAt:2}};
 function started(){return transition(game(),'start',{},1000,[],'attempt-one');}

@@ -1,6 +1,6 @@
-import {newGame} from '../../functions/src/seed';
-import {hydrate,project,rank,transition,username,validateContent} from '../../functions/src/engine';
-import {exportsFor} from '../../functions/src/export';
+import {newGame} from './core/seed';
+import {hydrate,project,rank,transition,username,validateContent} from './core/engine';
+import {exportsFor} from './core/export';
 import type {Snapshot,Submission,Game} from './types';
 const key='congress-demo-v1',event='congress-demo-change';
 const names=['Tomi','Emmanuel','Deborah','Samuel','Esther','Daniel','Faith','Joshua','Grace','David','Mercy','Caleb'];

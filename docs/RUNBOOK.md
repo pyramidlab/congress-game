@@ -25,7 +25,7 @@
 - **One player disconnects:** ask them to reopen the same browser and link. Their score and membership return. Do not accept a second username as a replacement for their identity.
 - **Many players lose the question:** pause if the timer is running. Replay the question after connectivity returns; replay voids the previous attempt and its points for everyone. Use a fresh attempt, never manually add points from cached answers.
 - **Host refreshes:** reopen the same PIN and sign in if required. State is in Firebase. Two operators should coordinate verbally; stale commands are rejected rather than overwriting each other.
-- **Timer reaches zero without reveal:** late answers are still blocked. Use manual reveal and inspect the scheduler notice after the game.
+- **Timer reaches zero without reveal:** late answers are still blocked. Use manual reveal and check that the host/display remain connected.
 - **Host misclicks:** survey Undo restores the previous board and scores. Manual match-total correction is available. A quiz replay discards the entire current attempt; a skip discards it and advances.
 - **Internet/server outage:** stop the phone quiz. Keep the current online score export if available. Open the downloaded offline board, name the teams, run surveys manually and export its JSON match record. It works without internet; it does not update the live bracket or online scores. Use a written bracket and the score correction controls as needed.
 - **Backup failure:** download manual player and campus CSVs immediately. The host shows backup status; database results still exist independently of the backup files.
