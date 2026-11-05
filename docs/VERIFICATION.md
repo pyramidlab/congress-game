@@ -15,7 +15,7 @@ The app has three linked views: a host starts and controls a session, players su
 | Initial player page transfer budget | Passed | 275,852 bytes gzip for prerendered HTML and 11 initial JS/CSS assets, below 512,000-byte target; excludes optional question images and later navigation/downloads |
 | Browser demo | Passed | Host start, auto reveal, player answer/score, same-browser refresh recovery; inspected phone at 390 × 844 and desktop host layout |
 
-The load test checks local database receipt, rules and ranking. It is not a 200-player production benchmark, and it does not include Auth account creation, deployed Functions, WAN throttling or venue Wi-Fi. The eight-player backend check exercises the actual callable boundary separately. No live Firebase credentials were supplied, so production Firebase/IAM/App Check and automatic Cloud Tasks reveal are still unverified.
+The load test checks local database receipt, rules and ranking. It is not a 200-player production benchmark, and it does not include Auth account creation, deployed Functions, WAN throttling or venue Wi-Fi. The eight-player backend check exercises the actual callable boundary separately. No live Firebase credentials were supplied, so production Firebase/IAM, optional App Check enforcement and automatic Cloud Tasks reveal are still unverified.
 
 The Windows environment needed a temporary dependency extraction and directory-creation workaround because normal npm/build filesystem operations returned EPERM. Those workarounds are outside the application repository. The committed lockfiles and standard npm scripts are used by GitHub CI and Vercel. Local runtime: Node 24 and Java 25; deployment/CI target: Node 22 and Java 21.
 

@@ -37,7 +37,7 @@ Hosts can save complete question sets to an account library, reopen recent games
 
 Scoring and state transitions run in Cloud Functions. Raw answer receipt time comes from Realtime Database, so a cold callable function does not add to a player's answer time. Paused time is excluded. Scores derive from non-voided rounds; replaying voids the old attempt. Ranking uses points, total correct-answer time, then join time. Campus totals use the best five by default.
 
-Private questions, correct answers, raw submissions, backups and host state are denied to ordinary players. Only the current question's public fields are projected; its correct option appears at reveal. Host functions require the `admin` custom claim and production App Check. Rules deny client score and game-state writes. A six-digit PIN identifies a public game; it is not a host credential.
+Private questions, correct answers, raw submissions, backups and host state are denied to ordinary players. Only the current question's public fields are projected; its correct option appears at reveal. Host functions require the `admin` custom claim. App Check enforcement can be enabled after its domains and site key are configured. Rules deny client score and game-state writes. A six-digit PIN identifies a public game; it is not a host credential.
 
 Question deadlines reject late writes even if automatic reveal is delayed. Cloud Tasks closes a question automatically; the host also has a manual reveal button and a visible scheduler error. Results persist after every reveal and automatic CSV/JSON backups are saved at podium, winner and end.
 

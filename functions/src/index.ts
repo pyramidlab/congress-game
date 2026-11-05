@@ -15,7 +15,7 @@ const region='europe-west1';
 const databaseRegion=process.env.FUNCTIONS_EMULATOR==='true'?'us-central1':region;
 setGlobalOptions({region,maxInstances:20});
 const db=getDatabase();
-const callableOptions={enforceAppCheck:process.env.FUNCTIONS_EMULATOR!=='true' && process.env.ENFORCE_APP_CHECK!=='false',timeoutSeconds:60};
+const callableOptions={enforceAppCheck:process.env.FUNCTIONS_EMULATOR!=='true' && process.env.ENFORCE_APP_CHECK==='true',timeoutSeconds:60};
 function pinOf(value:unknown):string {const pin=String(value??'');if(!/^\d{6}$/.test(pin))throw new HttpsError('invalid-argument','Enter a six-digit PIN.');return pin;}
 function auth(r:{auth?:{uid:string;token:Record<string,unknown>}}):string {if(!r.auth)throw new HttpsError('unauthenticated','Please sign in again.');return r.auth.uid;}
 function admin(r:{auth?:{uid:string;token:Record<string,unknown>}}):string {const uid=auth(r);if(r.auth!.token.admin!==true)throw new HttpsError('permission-denied','This account is not a host.');return uid;}
