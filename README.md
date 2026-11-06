@@ -10,6 +10,12 @@ Use Node.js 22. Run `npm ci`, then `npm run dev`. Open `http://localhost:3000/ho
 
 Routes: `/` welcome, `/host` administrator, `/join` phone, `/display` projector and `/offline-board.html` standalone fallback.
 
+## Game sounds
+
+On the projector display, click **Sound off** to enable local audio. **Sound options** provides volume, a final-countdown preview and a downloadable ZIP of seven original WAV clips. Normal ticks play once per second; the final five seconds use two ticks per second, followed by a time-up cue. Quiz/survey reveals, survey strikes, the podium and winners have separate cues. Pausing stops the countdown and muting stops current playback. Player phones remain silent.
+
+Playback is synthesized locally without streaming or fetching audio files. Downloads are optional. The build generates `/sounds/congress-game-sounds.zip` and individual WAV clips with `scripts/generate-sounds.ts`; these generated assets are excluded from Git. A click is required to enable sound after opening or refreshing the projector page.
+
 ## Connect the event's Firebase project
 
 Follow [setup](docs/SETUP.md) and [the operator runbook](docs/RUNBOOK.md). Copy `.env.example` to `.env.local` for local live play. Put server credentials only in `FIREBASE_SERVICE_ACCOUNT`; public web configuration uses `NEXT_PUBLIC_` variables. Host access is controlled by `HOST_UIDS`.

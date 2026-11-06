@@ -11,3 +11,4 @@ test-results/
 *.tsbuildinfo
 service-account*.json
 firebase-adminsdk*.json
+public/sounds/

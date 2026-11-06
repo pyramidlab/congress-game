@@ -1,23 +1,22 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useState} from 'react';
 import {useSearchParams} from 'next/navigation';
 import {useGame} from '@/lib/use-game';
 import {Brand,Connection,Countdown,DemoBanner,Leaderboard,Notice,QR,shapes} from './common';
+import {useGameSounds} from '@/lib/use-game-sounds';
+import DisplaySoundControls from './display-sound-controls';
 export default function Display(){
  const params=useSearchParams(),pin=params.get('pin')??'',demo=params.get('demo')==='1',v=useGame(pin,demo),g=v.game;
- const [url,setUrl]=useState(''),[audio,setAudio]=useState(false),[campuses,setCampuses]=useState<boolean|null>(null),[light,setLight]=useState(false),ctx=useRef<AudioContext|null>(null),last=useRef('');
+ const [url,setUrl]=useState(''),[campuses,setCampuses]=useState<boolean|null>(null),[light,setLight]=useState(false);
+ const sound=useGameSounds(g,v.offset);
  useEffect(()=>setCampuses(null),[g?.leaderboardMode,g?.phase]);
  useEffect(()=>setUrl(window.location.origin+'/join?pin='+pin+(demo?'&demo=1':'')),[pin,demo]);
- useEffect(()=>{if(!g)return;const signature=g.phase+':'+g.round?.attempt+':'+g.feud.strikes+':'+g.feud.revealed?.length;if(last.current!==signature&&last.current&&audio&&ctx.current){
-  const strike=g.feud.strikes>Number(last.current.split(':').at(-2)||0),ac=ctx.current,osc=ac.createOscillator(),gain=ac.createGain();
-  osc.type=strike?'sawtooth':'sine';osc.frequency.setValueAtTime(strike?110:660,ac.currentTime);osc.frequency.exponentialRampToValueAtTime(strike?70:880,ac.currentTime+.16);gain.gain.setValueAtTime(.07,ac.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.25);osc.connect(gain);gain.connect(ac.destination);osc.start();osc.stop(ac.currentTime+.3);
- }last.current=signature;},[g?.phase,g?.round?.attempt,g?.feud.strikes,g?.feud.revealed?.length,audio]);
  if(!pin)return <main className="loading-page"><Brand/><h1>Ready for the big screen?</h1><p>Open the display from your host dashboard.</p><a href="/host" className="button primary">Go to host dashboard →</a></main>;
  if(v.loading)return <main className="loading-page">Connecting the big screen…</main>;
  if(!g)return <main className="loading-page"><h1>Waiting for a connection.</h1><Notice error>{v.error||'Check the game PIN.'}</Notice><button className="button primary" onClick={v.reconnect}>Reconnect</button></main>;
  const campusView=campuses??(g.leaderboardMode==='campus');
  const question=['question','paused','reveal'].includes(g.phase),match=g.feud.matches[g.feud.match],team=(id:number)=>g.teams.find(t=>t.id===id)?.name??'To be decided';
- return <main className={'display-page display-state-'+g.phase+(light?' display-light':'')}>{demo&&<DemoBanner/>}<header className="display-header"><div className="display-identity"><Brand/><span className="display-event">{g.name}</span></div><div className="header-actions"><Connection connected={v.connected} demo={demo}/><button className="icon-button" onClick={()=>setLight(value=>!value)}>{light?'Dark backdrop':'Light backdrop'}</button><button className="icon-button" aria-label={audio?'Mute display sound':'Enable display sound'} onClick={async()=>{if(!ctx.current)ctx.current=new AudioContext();await ctx.current.resume();setAudio(a=>!a);}}>{audio?'♪ Sound on':'♪ Sound off'}</button></div></header>
+ return <main className={'display-page display-state-'+g.phase+(light?' display-light':'')}>{demo&&<DemoBanner/>}<header className="display-header"><div className="display-identity"><Brand/><span className="display-event">{g.name}</span></div><div className="header-actions"><Connection connected={v.connected} demo={demo}/><button className="icon-button" onClick={()=>setLight(value=>!value)}>{light?'Dark backdrop':'Light backdrop'}</button><DisplaySoundControls sound={sound}/></div></header>
  <section className="display-stage">
  {g.phase==='lobby'?<div className="display-lobby">
   <div className="display-lobby-intro"><div className="eyebrow">YOUR CAMPUS. YOUR PEOPLE. YOUR MOMENT.</div><h1>Shine for<br/><em>a Purpose.</em></h1><p className="display-lobby-lead">{g.theme==='Shine for a Purpose'?'Join the quiz. Represent your campus.':g.theme}</p><div className="display-entry"><div className="display-pin-label">YOUR GAME PIN</div><div className="display-pin" aria-label={'Game PIN '+pin}>{pin.slice(0,3)}<span>{pin.slice(3)}</span></div><div className="display-join-instructions"><span>Or open on your phone</span><strong>{url.replace(/^https?:\/\//,'').split('?')[0]}</strong></div></div></div>
