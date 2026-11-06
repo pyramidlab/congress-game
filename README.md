@@ -2,7 +2,7 @@
 
 A phone quiz, campus competition and on-stage survey tournament for Apostolic Faith Campus Fellowship, Ekiti Area Student Congress 1.0, themed **Shine for a Purpose**. This site serves this specific event. Separate host, phone and projector views use Next.js on Vercel with Firebase Authentication and Realtime Database.
 
-The organizer's logo and flier are in `public/event/`; the event identity, dates and venue are in `src/lib/event.ts`. The phone join page downloads only the 5 KB logo. The 75 KB flier loads lazily on the welcome page.
+The organizer's logo and revised flier are in `public/event/`; the event identity, dates (**6–8 November 2026**) and venue are in `src/lib/event.ts`. The phone join page downloads only the 5 KB logo. The 83 KB flier loads lazily on the welcome page.
 
 ## Run locally
 

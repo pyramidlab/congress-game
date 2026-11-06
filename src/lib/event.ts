@@ -3,6 +3,6 @@ export const event = {
  theme: 'Shine for a Purpose',
  organization: 'Apostolic Faith Campus Fellowship',
  area: 'Ekiti Area',
- dates: '30 October – 1 November 2026',
+ dates: '6–8 November 2026',
  venue: 'Apostolic Faith Church, Iyin-Ekiti',
 } as const;
