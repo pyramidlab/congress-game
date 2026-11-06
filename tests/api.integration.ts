@@ -31,9 +31,24 @@ async function main(){
  const saved=await call(host,'hostLibrary',{action:'save',content});
  const library=await call(host,'hostLibrary',{action:'list'});assert.ok(library.templates.some((t:any)=>t.id===saved.id));assert.ok(library.rooms.some((room:any)=>room.pin===pin));
  const copy=await call(host,'createGame',{templateId:saved.id});assert.notEqual(copy.pin,pin);
+ await assert.rejects(()=>call(host,'deleteGame',{pin:copy.pin}),{code:'functions/invalid-argument'});
+ await assert.rejects(()=>call(players[0],'deleteGame',{pin:copy.pin,confirmPin:copy.pin}),{code:'functions/permission-denied'});
+ const otherHost=await client('other-host-'+Date.now());await admin.auth().setCustomUserClaims(otherHost.uid,{admin:true});await otherHost.auth.currentUser!.getIdToken(true);
+ await assert.rejects(()=>call(otherHost,'deleteGame',{pin:copy.pin,confirmPin:copy.pin}),{code:'functions/permission-denied'});
+ const branches=['games','sessions','members','names','answers','results','progress','presence','commands','backups','backupFiles','scheduler'];
+ await admin.database().ref().update(Object.fromEntries(branches.filter(p=>!['games','sessions','members'].includes(p)).map(p=>[p+'/'+copy.pin+'/probe',{test:true}])));
+ await Promise.allSettled([call(extra,'joinGame',{pin:copy.pin,name:'Delete Tester',campus:'EKSU'}),call(host,'deleteGame',{pin:copy.pin,confirmPin:copy.pin})]);
+ for(const branch of [...branches,'locks'])assert.equal((await admin.database().ref(branch+'/'+copy.pin).get()).exists(),false,branch+' must not survive deletion');
+ assert.equal((await admin.database().ref('hosts/'+host.uid+'/rooms/'+copy.pin).get()).exists(),false);
+ assert.equal((await admin.database().ref('deletedGames/'+copy.pin+'/by').get()).val(),host.uid);
+ assert.equal((await call(host,'deleteGame',{pin:copy.pin,confirmPin:copy.pin})).deleted,true);
+ await assert.rejects(()=>call(extra,'joinGame',{pin:copy.pin,name:'Late Player',campus:'EKSU'}));
+ await assert.rejects(()=>call(host,'createGame',{sourcePin:copy.pin}));
  await assert.rejects(()=>call(players[0],'hostLibrary',{action:'list'}));
  console.log('Created a game, joined eight players, rejected a duplicate name and unauthorized host command.');
  await call(host,'hostAccess',{});await command('start');
+ await assert.rejects(()=>call(host,'deleteGame',{pin,confirmPin:pin}),{code:'functions/failed-precondition'});
+ assert.equal((await admin.database().ref('games/'+pin+'/phase').get()).val(),'question');
  await assert.rejects(()=>call(players[0],'playerReview',{pin}));
  let g=(await get(ref(players[0].db,'sessions/'+pin))).val();assert.equal(g.current.correct,undefined);assert.equal(g.correct,undefined);
  await assert.rejects(()=>get(ref(players[0].db,'games/'+pin)));
@@ -49,6 +64,10 @@ async function main(){
  await command('feud');await command('flip',{index:0});await command('strike');await command('award',{side:0});await command('undo');
  g=(await get(ref(host.db,'games/'+pin))).val();assert.equal(g.feud.awarded,false);assert.equal(g.feud.strikes,1);
  const backup=await call(host,'exportBackup',{pin});assert.equal(backup.files.length,3);const csv=await call(host,'exportGame',{pin});assert.match(csv.players,/Tester 0/);assert.match(csv.campuses,/EKSU/);
+ await command('end');assert.equal((await call(host,'deleteGame',{pin,confirmPin:pin})).deleted,true);
+ for(const branch of [...branches,'locks'])assert.equal((await admin.database().ref(branch+'/'+pin).get()).exists(),false);
+ const remaining=await call(host,'hostLibrary',{action:'list'});assert.ok(!remaining.rooms.some((room:any)=>room.pin===pin||room.pin===copy.pin));assert.ok(remaining.templates.some((t:any)=>t.id===saved.id));
+ console.log('PASS: creator-only confirmed deletion, active-game protection, concurrent join cleanup, ended-game cleanup and saved-set preservation.');
  console.log('PASS: real emulated Auth → Next.js API → Database rules → public state/results → pairing → survey controls → CSV export.');
 }
 const timeout=setTimeout(()=>{console.error('Integration test exceeded 180 seconds.');process.exit(1);},180000);

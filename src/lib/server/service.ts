@@ -46,7 +46,8 @@ export async function gameProgress(r:ServiceRequest){
  admin(r);const pin=pinOf(r.data.pin),g=(await db.ref('games/'+pin).get()).val() as Game|null;
  if(!g?.round)return {count:0};
  const snap=await db.ref('answers/'+pin+'/'+g.round.attempt).get(),count=snap.numChildren();
- await db.ref('progress/'+pin+'/'+g.round.attempt+'/count').transaction(value=>Math.max(Number(value)||0,count));return {count};
+ await db.ref('progress/'+pin+'/'+g.round.attempt+'/count').transaction(value=>Math.max(Number(value)||0,count));
+ if((await db.ref('deletedGames/'+pin).get()).exists()){await db.ref('progress/'+pin).remove();return {count:0};}return {count};
 }
 export async function exportBackup(r:ServiceRequest){
  admin(r);const pin=pinOf(r.data.pin),meta=(await db.ref('backups/'+pin).get()).val();if(!meta?.ok)throw new ServiceError('not-found','No saved backup is available yet.');
@@ -90,10 +91,13 @@ export async function createGame(r:ServiceRequest){
   const content=source?validateContent(source):undefined;
   for(let i=0;i<10;i++){
    const pin=String(randomInt(100000,1000000)),g=newGame(pin,String(r.data?.name??event.name));
+   if((await db.ref('deletedGames/'+pin).get()).exists())continue;
    if(content)Object.assign(g,content);
    g.createdBy=uid;g.createdAt=Date.now();
    const result=await db.ref('games/'+pin).transaction(v=>v?undefined:g);
    if(!result.committed)continue;
+   // A retired PIN is never reused, including when creation races deletion.
+   if((await db.ref('deletedGames/'+pin).get()).exists()){await db.ref('games/'+pin).remove();continue;}
    await publish({game:g,members:{},answers:{}});
    await db.ref('hosts/'+uid+'/rooms/'+pin).set({pin,name:g.name,createdAt:g.createdAt,phase:g.phase});return {pin};
   }
@@ -116,6 +120,24 @@ export async function hostLibrary(r:ServiceRequest){
   return {templates:Object.entries(templates.val()??{}).map(([id,t])=>({id,name:(t as {name:string}).name,createdAt:(t as {createdAt:number}).createdAt})).reverse(),rooms:Object.values(rooms.val()??{}).reverse()};
  }catch(e){userError(e);}
 }
+export async function deleteGame(r:ServiceRequest){
+ const uid=admin(r),pin=pinOf(r.data.pin);
+ if(r.data.confirmPin!==pin)throw new ServiceError('invalid-argument','Confirm the game PIN before deleting it.');
+ return withLock(pin,async()=>{
+  const game=(await db.ref('games/'+pin).get()).val() as Game|null;
+  if(!game){
+   const deleted=(await db.ref('deletedGames/'+pin).get()).val();
+   if(deleted?.by!==uid)throw new ServiceError('not-found','Game not found.');
+   await db.ref('hosts/'+uid+'/rooms/'+pin).remove();return {deleted:true};
+  }
+  if(game.createdBy!==uid)throw new ServiceError('permission-denied','Only the host who created this game can delete it.');
+  if(game.phase!=='lobby'&&game.phase!=='ended')throw new ServiceError('failed-precondition','End this game before deleting it.');
+  const update:Record<string,unknown>={['deletedGames/'+pin]:{by:uid,at:Date.now()},['hosts/'+uid+'/rooms/'+pin]:null};
+  for(const branch of ['games','sessions','members','names','answers','results','progress','presence','commands','backups','backupFiles','scheduler'])update[branch+'/'+pin]=null;
+  await db.ref().update(update);
+  return {deleted:true};
+ });
+}
 export async function joinGame(r:ServiceRequest){
  const uid=auth(r),pin=pinOf(r.data?.pin);
  try {
@@ -136,9 +158,14 @@ export async function joinGame(r:ServiceRequest){
   if(!reserved.committed)throw new Error('That name is taken. Try adding your initials.');
   const player:Player={uid,name,campus,joinedAt:Date.now()};
   // Recheck after name reservation; a host may have closed the lobby in between.
-  const latest=(await db.ref('games/'+pin).get()).val() as Game;
-  if(latest.phase!=='lobby'&&!(latest.phase==='question'&&latest.allowLate)){await nameRef.transaction(v=>!v||v===uid?null:undefined);throw new Error('Game already started.');}
+  const latest=(await db.ref('games/'+pin).get()).val() as Game|null;
+  if(!latest||latest.phase!=='lobby'&&!(latest.phase==='question'&&latest.allowLate)){await nameRef.transaction(v=>!v||v===uid?null:undefined);throw new Error(latest?'Game already started.':'Game not found.');}
   await db.ref('members/'+pin+'/'+uid).set(player);
+  // A join already in flight must not recreate data after game deletion.
+  if(!(await db.ref('games/'+pin).get()).exists()){
+   await db.ref().update({['members/'+pin+'/'+uid]:null,['names/'+pin+'/'+key]:null,['presence/'+pin+'/'+uid]:null});
+   throw new Error('Game not found.');
+  }
   await publishMembership(pin);
   return {player};
  }catch(e){userError(e);}

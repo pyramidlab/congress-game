@@ -4,7 +4,7 @@ import * as game from '@/lib/server/service';
 export const runtime='nodejs';
 export const maxDuration=30;
 const handlers:Record<string,(request:game.ServiceRequest)=>Promise<unknown>>={
- createGame:game.createGame,hostAccess:game.hostAccess,hostState:game.hostState,hostLibrary:game.hostLibrary,
+ createGame:game.createGame,deleteGame:game.deleteGame,hostAccess:game.hostAccess,hostState:game.hostState,hostLibrary:game.hostLibrary,
  joinGame:game.joinGame,hostCommand:game.hostCommand,exportGame:game.exportGame,
  playerReview:game.playerReview,syncGame:game.syncGame,gameProgress:game.gameProgress,exportBackup:game.exportBackup
 };

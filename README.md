@@ -10,6 +10,8 @@ Use Node.js 22. Run `npm ci`, then `npm run dev`. Open `http://localhost:3000/ho
 
 Routes: `/` welcome, `/host` administrator, `/join` phone, `/display` projector and `/offline-board.html` standalone fallback.
 
+Hosts can delete their own lobby or ended games from **Recent games** on the host desk. The confirmation identifies the name and PIN. Deletion removes game content, players, answers, results and backups; export anything needed first. Saved question sets stay in the library. Running games must be ended before deletion. Deleted PINs are retired so old join links cannot open a new session.
+
 ## Game sounds
 
 On the projector display, click **Sound off** to enable local audio. **Sound options** provides volume, a final-countdown preview and a downloadable ZIP of seven original WAV clips. Normal ticks play once per second; the final five seconds use two ticks per second, followed by a time-up cue. Quiz/survey reveals, survey strikes, the podium and winners have separate cues. Pausing stops the countdown and muting stops current playback. Player phones remain silent.
