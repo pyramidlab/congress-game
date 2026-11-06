@@ -1,5 +1,7 @@
-export type Phase = 'lobby' | 'question' | 'paused' | 'reveal' | 'leaderboard' | 'podium' | 'teams' | 'feud' | 'winner' | 'ended';
-export interface Question { id: string; text: string; options: string[]; correct: number; seconds: number; points: number; practice?: boolean; image?: string }
+import type {GiantState,PublicGiant} from './giant';
+export type GameMode='quiz'|'bible-giant';
+export type Phase = 'lobby' | 'question' | 'paused' | 'reveal' | 'leaderboard' | 'podium' | 'teams' | 'feud' | 'giant' | 'winner' | 'ended';
+export interface Question { id: string; text: string; options: string[]; correct: number; seconds: number; points: number; practice?: boolean; image?: string;reference?:string }
 export interface Survey { id: string; question: string; answers: {text: string; points: number; accept?: string}[] }
 export interface Player {uid: string; name: string; campus: string; joinedAt: number; removed?: boolean}
 export interface Standing extends Player {rank: number; score: number; answerTime: number}
@@ -10,15 +12,17 @@ export interface Match {a: number; b: number; scores: [number, number]; winner?:
 export interface FeudState {match: number; survey: number; revealed: number[]; strikes: number; controlling: 0 | 1; multiplier: number; awarded: boolean; matches: Match[]; used: number[]; suddenDeath: boolean}
 export interface Round {attempt: string; questionIndex: number; startedAt: number; endsAt: number; pausedMs: number; pauseAt?: number; remaining?: number; active: boolean; void?: boolean}
 export interface Game {
+ mode:GameMode;giant:GiantState;
  createdBy?:string;createdAt?:number;
  pin: string; name: string; theme: string; revision: number; phase: Phase;
  campuses: string[]; questions: Question[]; surveys: Survey[];
   campusTop: number; scoring: 'speed' | 'accuracy'; allowLate: boolean; leaderboardMode?: 'individual' | 'campus';
  index: number; round?: Round; rounds: Round[]; teams: Team[]; feud: FeudState;
- audit: {action: string; at: number}[]; undo?: {teams: Team[]; feud: FeudState; phase: Phase}[];
+ audit: {action: string; at: number}[]; undo?: {teams: Team[]; feud: FeudState; phase: Phase;giant?:GiantState}[];
 }
 export interface PlayerResult {score: number; rank: number; total: number; campusRank: number; correct?: boolean; earned: number; option?: number; attempt?: string}
 export interface PublicGame {
+ mode:GameMode;giant?:PublicGiant;
  pin: string; name: string; theme: string; phase: Phase; revision: number;
  campuses: string[]; scoring: 'speed' | 'accuracy'; allowLate: boolean;
   questionIndex: number; questionNumber: number; questionCount: number; practice: boolean; leaderboardMode?: 'individual' | 'campus';

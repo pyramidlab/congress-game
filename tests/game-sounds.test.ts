@@ -22,10 +22,9 @@ test('manual reveal uses a chime while deadline closure uses the time-up cue; pa
  assert.equal(changedSound(signal('paused'),signal('reveal'),50000),'reveal');
  const before=signal('feud'),after=signal('feud');before.feud.strikes=2;after.feud.strikes=1;assert.equal(changedSound(before,after,20000),null);
 });
-test('survey strikes, reveals and final celebrations select distinct sounds',()=>{
- const before=signal('feud'),strike=signal('feud'),reveal=signal('feud');strike.feud.strikes=1;reveal.feud.revealed=[0];
- assert.equal(changedSound(before,strike,0),'strike');assert.equal(changedSound(before,reveal,0),'reveal');
- assert.equal(changedSound(before,signal('winner'),0),'winner');assert.equal(changedSound(signal('reveal'),signal('podium'),0),'winner');
+test('Bible Giant confirmation, life loss and celebrations select distinct sounds',()=>{
+ const before=signal('giant'),confirm=signal('giant'),result=signal('giant');before.giant.status='question';before.giant.players=[{id:'a',name:'Ada',lives:3,correct:0}];confirm.giant={...structuredClone(before.giant),status:'confirm',selected:1};result.giant={...structuredClone(confirm.giant),status:'result',players:[{id:'a',name:'Ada',lives:2,correct:0}]};
+ assert.equal(changedSound(before,confirm,0),'urgent');assert.equal(changedSound(confirm,result,0),'strike');assert.equal(changedSound(result,signal('winner'),0),'winner');
 });
 test('all original clips contain finite audible samples without clipping',()=>{
  for(const name of soundNames){const samples=soundSamples(name);assert.ok(samples.length>=soundRate*.05);let peak=0;for(const sample of samples){assert.ok(Number.isFinite(sample));peak=Math.max(peak,Math.abs(sample));}assert.ok(peak>.05,name+' must not be silent');assert.ok(peak<=.750001,name+' must not clip');}

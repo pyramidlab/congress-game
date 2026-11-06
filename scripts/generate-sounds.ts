@@ -4,7 +4,7 @@ import {deflateRawSync} from 'node:zlib';
 import {soundNames,soundRate,soundSamples} from '../src/lib/game-sounds';
 const target=process.argv[2]||'public/sounds';
 fs.mkdirSync(target,{recursive:true});
-const names=['01-countdown-tick.wav','02-final-five-tick.wav','03-time-up.wav','04-answer-reveal.wav','05-survey-strike.wav','06-winner.wav','07-countdown-preview.wav'];
+const names=['01-countdown-tick.wav','02-final-five-tick.wav','03-time-up.wav','04-answer-reveal.wav','05-life-lost.wav','06-winner.wav','07-countdown-preview.wav'];
 const files=soundNames.map((sound,index)=>{
  const samples=soundSamples(sound),buffer=Buffer.alloc(44+samples.length*2);
  buffer.write('RIFF',0);buffer.writeUInt32LE(buffer.length-8,4);buffer.write('WAVEfmt ',8);

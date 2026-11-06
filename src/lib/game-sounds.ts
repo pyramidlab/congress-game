@@ -1,4 +1,5 @@
 import type {PublicGame} from './types';
+import type {GiantState} from './core/giant';
 export const soundNames=['tick','urgent','time-up','reveal','strike','winner','countdown-preview'] as const;
 export type GameSound=typeof soundNames[number];
 export const soundRate=22050;
@@ -44,13 +45,20 @@ export function countdownBeat(remainingMs:number){
  const urgent=remainingMs<=5000,interval=urgent?500:1000;
  return {key:(urgent?'urgent:':'tick:')+Math.ceil(remainingMs/interval),sound:urgent?'urgent' as const:'tick' as const};
 }
-type Signal=Pick<PublicGame,'pin'|'phase'|'round'|'feud'>;
+type Signal=Pick<PublicGame,'pin'|'phase'|'round'|'feud'> & {giant?:Pick<GiantState,'status'|'selected'|'players'|'turn'>};
 export function changedSound(before:Signal|null,after:Signal,now:number):GameSound|null{
  // Reconnecting or enabling audio must not replay historical results.
  if(!before||before.pin!==after.pin)return null;
  if(before.phase!==after.phase){
   if(after.phase==='winner'||after.phase==='podium')return 'winner';
   if(after.phase==='reveal')return before.phase==='question'&&now>=(before.round?.endsAt??Infinity)?'time-up':'reveal';
+ }
+ if(before.phase==='giant'&&after.phase==='giant'&&before.giant&&after.giant){
+  if(after.giant.status==='confirm'&&(before.giant.status!=='confirm'||before.giant.selected!==after.giant.selected))return 'urgent';
+  if(after.giant.status==='result'&&before.giant.status!=='result'){
+   const player=after.giant.players[after.giant.turn],previous=before.giant.players.find(p=>p.id===player?.id);
+   return player&&previous&&player.lives<previous.lives?'strike':'reveal';
+  }
  }
  if(before.phase==='feud'&&after.phase==='feud'){
   if(after.feud.strikes>before.feud.strikes)return 'strike';

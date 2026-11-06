@@ -1,30 +1,175 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AFCF Ekiti Student Congress 1.0 · Offline Survey Board</title><style>
-*{box-sizing:border-box}body{margin:0;background:#0d1421;color:#f4f2ec;font:calc(16px + 2pt) Arial,sans-serif}header,footer{padding:20px 4vw;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155}header strong{letter-spacing:.13em;font-size:calc(15px + 2pt)}header span{color:#f6c85a;font-size:calc(12px + 2pt)}main{padding:30px 5vw;max-width:1800px;margin:auto}h1{font-size:clamp(26px,3.5vw,64px);line-height:1.2;text-align:center;max-width:1300px;margin:20px auto 35px}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f6c85a;outline-offset:3px}.board{display:grid;grid-template-columns:1fr 1fr;gap:16px}.slot{color:#f4f2ec;display:flex;align-items:center;justify-content:center;gap:20px;min-height:110px;border:2px solid #527199;border-radius:12px;background:#1a3253;padding:22px;text-align:left}.slot span{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#12253d;font-size:30px;color:#f6c85a}.slot.open{background:#e8c778;color:#17283b;justify-content:space-between;border-color:#fff0b3}.slot strong{font-size:clamp(20px,2.4vw,39px)}.slot b{font-size:39px}.scores{display:flex;align-items:center;justify-content:space-between;gap:30px;margin-top:32px}.team{background:#182438;border:1px solid #435269;border-radius:12px;padding:20px;flex:1;display:flex;justify-content:space-between;align-items:center;gap:20px}.team strong{font-size:24px}.team b{font-size:45px;color:#f6c85a}.strikes{color:#394659;font-size:65px;letter-spacing:12px;font-weight:700}.strikes em{color:#ff6674;font-style:normal}.round{display:flex;justify-content:space-between;align-items:center;color:#a1afc0;font-size:calc(13px + 2pt);letter-spacing:.1em}.round b{font-size:50px;color:#f6c85a}.dock{border-top:1px solid #334155;padding:25px 5vw;background:#151f2e;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.dock button,.dock select,.dock input{border:1px solid #475569;background:#192b40;color:#fff;border-radius:7px;min-height:42px;padding:10px 13px}.dock button.primary{background:#f6c85a;color:#17283b;font-weight:700}.dock input{width:160px}.dock select{max-width:370px}.dock label{font-size:calc(11px + 2pt);color:#a5b2c1}.dock label span{display:block;margin-bottom:6px}.dock label input,.dock label select{width:100%}.dock .hint{color:#a5b2c1;font-size:calc(11px + 2pt);width:100%;margin:10px 0}.status{color:#a4d8b7;font-size:calc(12px + 2pt)}.hide-controls .dock{display:none}footer{border-top:1px solid #334155;font-size:calc(11px + 2pt);color:#8797ad;gap:15px}footer button{background:transparent;border:1px solid #475569;border-radius:6px;color:#d2dbe6;padding:8px 12px}.hide-controls .slot{cursor:default}@media(max-width:700px){.board{grid-template-columns:1fr}.slot{min-height:75px;padding:16px}.slot strong{font-size:23px}.slot b{font-size:30px}.scores{gap:12px;flex-wrap:wrap}.team{padding:14px}.team strong{font-size:calc(16px + 2pt)}.team b{font-size:30px}.strikes{order:3;width:100%;text-align:center;font-size:45px}.dock select{max-width:100%}.round b{font-size:35px}}@media(prefers-reduced-motion:reduce){*{transition:none}}
-</style></head><body><header><strong>AFCF EKITI · STUDENT CONGRESS 1.0</strong><span>SHINE FOR A PURPOSE · OFFLINE SURVEY BOARD</span></header><main><div class="round"><span id="match-label">SURVEY SHOWDOWN</span><div>ROUND TOTAL <b id="round-total">0</b></div></div><h1 id="question"></h1><div id="board" class="board"></div><div class="scores"><div class="team"><strong id="name-a"></strong><b id="score-a">0</b></div><div id="strikes" class="strikes"></div><div class="team"><strong id="name-b"></strong><b id="score-b">0</b></div></div></main><section class="dock" id="dock"><label><span>Survey</span><select id="surveys"></select></label><button id="load">Load survey</button><label><span>Multiplier</span><select id="multiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></label><button id="strike">Add strike ×</button><button id="unstrike">Undo strike</button><button id="all">Reveal all</button><button class="primary" id="award-a">Award Team A</button><button class="primary" id="award-b">Award Team B</button><button id="undo">↶ Undo</button><label><span>Team A name</span><input id="input-a" value="Team A"></label><label><span>Team B name</span><input id="input-b" value="Team B"></label><button id="correct-a">Correct A score</button><button id="correct-b">Correct B score</button><button id="new-match">New match</button><button id="download">Export match</button><label><span>Import survey JSON</span><input id="import" type="file" accept=".json" style="width:210px"></label><p class="hint">Keys: 1–6 reveal answers · X adds a strike · U undoes. Three strikes give the other team a chance to steal; the host awards the round. Use the spare survey for sudden death. New match clears scores after confirmation. This board does not sync with the online game.</p><span class="status" id="status"></span></section><footer><span>KEEP THIS FILE ON THE HOST LAPTOP BEFORE THE EVENT.</span><button id="toggle">Hide host controls</button></footer>
-<script id="survey-data" type="application/json">[{"id":"survey-0","question":"Name something a student carries to a fellowship meeting.","answers":[{"text":"Bible","points":35,"accept":""},{"text":"Notebook and pen","points":25,"accept":""},{"text":"Phone","points":17,"accept":""},{"text":"Offering or money","points":12,"accept":""},{"text":"Water bottle","points":6,"accept":""},{"text":"Hymn book","points":5,"accept":""}]},{"id":"survey-1","question":"Name something people do at a congress besides listening to messages.","answers":[{"text":"Worship and sing","points":30,"accept":""},{"text":"Eat","points":22,"accept":""},{"text":"Take photos","points":18,"accept":""},{"text":"Take notes","points":12,"accept":""},{"text":"Make new friends","points":10,"accept":""},{"text":"Sleep during sessions","points":8,"accept":""}]},{"id":"survey-2","question":"Name a reason a student is late to morning prayer.","answers":[{"text":"Overslept","points":40,"accept":""},{"text":"No water or bathroom queue","points":20,"accept":""},{"text":"Distance or transport","points":15,"accept":""},{"text":"Stayed up late reading","points":13,"accept":""},{"text":"Dressing up","points":8,"accept":""},{"text":"No light or power","points":4,"accept":""}]},{"id":"survey-3","question":"Name something every student has in their hostel.","answers":[{"text":"Indomie or noodles","points":30,"accept":""},{"text":"Bucket","points":22,"accept":""},{"text":"Rechargeable lamp or fan","points":18,"accept":""},{"text":"Textbooks","points":14,"accept":""},{"text":"Gas cooker","points":10,"accept":""},{"text":"Garri","points":6,"accept":""}]},{"id":"survey-4","question":"Name a Bible character children learn about first.","answers":[{"text":"David","points":28,"accept":""},{"text":"Jesus","points":22,"accept":""},{"text":"Moses","points":18,"accept":""},{"text":"Noah","points":14,"accept":""},{"text":"Daniel","points":10,"accept":""},{"text":"Samson","points":8,"accept":""}]},{"id":"survey-5","question":"What do students do when the lecturer announces a surprise test?","answers":[{"text":"Panic","points":35,"accept":""},{"text":"Pray","points":25,"accept":""},{"text":"Look at a neighbour’s paper","points":18,"accept":""},{"text":"Pretend to be sick","points":10,"accept":""},{"text":"Borrow a pen","points":7,"accept":""},{"text":"Guess the answers","points":5,"accept":""}]},{"id":"survey-6","question":"Name something that makes a worship session great.","answers":[{"text":"Spirit-led atmosphere or passion","points":28,"accept":""},{"text":"Good song selection","points":24,"accept":""},{"text":"Strong vocalists or choir","points":20,"accept":""},{"text":"Instruments or band","points":15,"accept":""},{"text":"Congregation participation","points":8,"accept":""},{"text":"Good sound system","points":5,"accept":""}]},{"id":"survey-7","question":"Name something people forget when travelling to a congress.","answers":[{"text":"Charger","points":30,"accept":""},{"text":"Toiletries or towel","points":25,"accept":""},{"text":"Extra clothes","points":18,"accept":""},{"text":"Bedsheet","points":12,"accept":""},{"text":"Cash","points":9,"accept":""},{"text":"Footwear or sandals","points":6,"accept":""}]}]</script>
-<script>
-(function(){
-'use strict';var surveys=JSON.parse(document.getElementById('survey-data').textContent),history=[],store='congress-offline-v1',state={survey:0,revealed:[],strikes:0,multiplier:1,scores:[0,0],names:['Team A','Team B'],awarded:false};
-try{var saved=JSON.parse(localStorage.getItem(store)||'null');if(saved&&saved.state&&saved.surveys){surveys=saved.surveys;state=saved.state;}else if(saved&&saved.names&&surveys[saved.survey])state=saved;}catch(e){}
-function by(id){return document.getElementById(id)}function total(){return state.revealed.reduce(function(sum,i){return sum+(surveys[state.survey].answers[i].points||0)},0)*state.multiplier}
-function remember(){history.push(JSON.parse(JSON.stringify(state)));history=history.slice(-30)}
-function save(){try{localStorage.setItem(store,JSON.stringify({state:state,surveys:surveys}));by('status').textContent='Saved on this device.'}catch(e){by('status').textContent='Browser storage unavailable. Keep this page open.'}}
-function options(){by('surveys').textContent='';surveys.forEach(function(s,i){var o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+s.question;by('surveys').appendChild(o)})}
-function render(){var s=surveys[state.survey];by('question').textContent=s.question;by('round-total').textContent=total();by('board').textContent='';s.answers.forEach(function(a,i){var b=document.createElement('button');b.className='slot'+(state.revealed.indexOf(i)>=0?' open':'');b.setAttribute('aria-label','Reveal answer '+(i+1));if(state.revealed.indexOf(i)>=0){var t=document.createElement('strong');t.textContent=a.text;var n=document.createElement('b');n.textContent=a.points;b.appendChild(t);b.appendChild(n)}else{var x=document.createElement('span');x.textContent=i+1;b.appendChild(x)}b.onclick=function(){reveal(i)};by('board').appendChild(b)});by('strikes').textContent='';for(var i=0;i<3;i++){var x=document.createElement(i<state.strikes?'em':'span');x.textContent='×';by('strikes').appendChild(x)}by('name-a').textContent=state.names[0];by('name-b').textContent=state.names[1];by('score-a').textContent=state.scores[0];by('score-b').textContent=state.scores[1];by('input-a').value=state.names[0];by('input-b').value=state.names[1];by('multiplier').value=state.multiplier;by('surveys').value=state.survey;by('award-a').disabled=by('award-b').disabled=state.awarded;by('match-label').textContent=state.awarded?'ROUND AWARDED':'SURVEY SHOWDOWN';save()}
-function reveal(i){if(state.awarded||state.revealed.indexOf(i)>=0||!surveys[state.survey].answers[i])return;remember();state.revealed.push(i);render()}
-by('load').onclick=function(){if(state.revealed.length&&!state.awarded&&!confirm('Discard this unawarded round?'))return;remember();state.survey=Number(by('surveys').value);state.revealed=[];state.strikes=0;state.awarded=false;render()};
-by('multiplier').onchange=function(){if(state.awarded){alert('Undo the award before changing the multiplier.');render();return}remember();state.multiplier=Number(this.value);render()};
-by('strike').onclick=function(){if(state.awarded)return;remember();state.strikes=Math.min(3,state.strikes+1);render()};
-by('unstrike').onclick=function(){remember();state.strikes=Math.max(0,state.strikes-1);render()};
-by('all').onclick=function(){remember();state.revealed=surveys[state.survey].answers.map(function(_,i){return i});render()};
-function award(side){if(state.awarded)return;remember();state.scores[side]+=total();state.awarded=true;render()}by('award-a').onclick=function(){award(0)};by('award-b').onclick=function(){award(1)};
-by('undo').onclick=function(){if(history.length){state=history.pop();render()}};
-[0,1].forEach(function(i){by('input-'+(i?'b':'a')).onchange=function(){remember();state.names[i]=this.value.trim().slice(0,60)||'Team '+(i?'B':'A');render()};by('correct-'+(i?'b':'a')).onclick=function(){var input=prompt('Correct match total',state.scores[i]);if(input===null)return;var n=Number(input);if(Number.isInteger(n)&&n>=0){remember();state.scores[i]=n;render()}}});
-by('new-match').onclick=function(){if(!confirm('Start a new match and clear both scores?'))return;remember();state.scores=[0,0];state.revealed=[];state.strikes=0;state.awarded=false;state.multiplier=1;render()};
-by('download').onclick=function(){var u=URL.createObjectURL(new Blob([JSON.stringify({state:state,surveys:surveys},null,2)],{type:'application/json'}));var a=document.createElement('a');a.href=u;a.download='congress-offline-match.json';a.click();setTimeout(function(){URL.revokeObjectURL(u)},1000)};
-by('import').onchange=async function(){try{var f=this.files[0];if(!f)return;var data=JSON.parse(await f.text());if(!Array.isArray(data)||!data.length||data.some(function(s){return typeof s.question!=='string'||!Array.isArray(s.answers)||!s.answers.length||s.answers.length>6||s.answers.some(function(a){return typeof a.text!=='string'||!Number.isInteger(a.points)||a.points<0||a.points>100})}))throw Error('Use a survey array with question, answers, text and integer points.');if(!confirm('Replace the survey library? Existing match scores will stay.'))return;surveys=data;state.survey=0;state.revealed=[];state.awarded=false;state.strikes=0;history=[];options();render()}catch(e){alert(e.message)}};
-by('toggle').onclick=function(){document.body.classList.toggle('hide-controls');this.textContent=document.body.classList.contains('hide-controls')?'Show host controls':'Hide host controls'};
-document.addEventListener('keydown',function(e){if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;if(/^[1-6]$/.test(e.key))reveal(Number(e.key)-1);if(e.key.toLowerCase()==='x')by('strike').click();if(e.key.toLowerCase()==='u')by('undo').click()});
-options();render();
-})();</script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AFCF Ekiti · Offline Bible Giant</title><style>
+*{box-sizing:border-box}body{margin:0;background:#0d1421;color:#f4f2ec;font:17px/1.6 Arial,sans-serif}header,footer{padding:18px 5vw;border-bottom:1px solid #34445a;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}header span,small{color:#9bcff4}main{max-width:1350px;margin:auto;padding:35px 5vw}h1{font:48px/1.1 Georgia,serif;text-align:center}h2{text-align:center;font-size:32px}button,input,textarea,select{font:inherit}button{padding:13px 18px;border-radius:8px;border:1px solid #536981;background:#192b43;color:#fff;cursor:pointer}button:disabled{opacity:.35;cursor:default}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #99cff5;outline-offset:3px}.primary{background:#99cff5;color:#11213b}.danger{color:#ff9ca5}label{display:block;margin:16px 0 8px}input,textarea{width:100%;padding:12px;background:#152135;color:#fff;border:1px solid #536981;border-radius:8px}.setup{max-width:600px;margin:auto}.numbers{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:12px}.options{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:30px 0}.options button:disabled{opacity:1;cursor:default}.options button{min-height:85px;text-align:left;border-radius:25px}.selected{background:#795516!important}.correct{background:#206344!important}.incorrect{background:#7c2c37!important}.roster{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.roster>span{border:1px solid #536981;padding:10px 15px;border-radius:10px}.out{opacity:.4}.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:24px 0}.feedback{text-align:center;font-size:24px;color:#99cff5}.error{color:#ff9ca5;text-align:center}.hide-controls .host-controls{display:none}footer{border-top:1px solid #34445a;font-size:14px;margin-top:25px}@media(max-width:650px){h1{font-size:34px}h2{font-size:25px}.options{grid-template-columns:1fr}main{padding:25px 20px}}
+</style></head><body><header><strong>AFCF EKITI · STUDENT CONGRESS 1.0</strong><span>OFFLINE BIBLE GIANT · LOCAL TO THIS DEVICE</span></header><main><h1>Who wants to be a Bible Giant?</h1><section id="setup" class="setup host-controls"><label for="names">Stage players · one per line</label><textarea id="names" rows="6"></textarea><label for="lives">Starting lives</label><input id="lives" type="number" min="1" max="9" value="3"><div class="actions"><button id="start" class="primary">Start stage game</button></div></section><h2 id="turn"></h2><div id="scene"></div><div id="roster" class="roster"></div><label class="host-controls" id="extra-pool">Add extra questions (question-set JSON)<input id="extra-file" type="file" accept=".json,application/json"></label><p id="error" class="error" role="alert"></p><div class="actions host-controls"><button id="undo">Undo turn action</button><button id="end">End game</button><button id="export">Export game JSON</button><button id="reset">New game</button></div></main><footer><span>Keep this file on the host laptop. It works without internet and does not sync to the live game.</span><button id="toggle">Hide host controls</button></footer>
+<script id="giant-data" type="application/json">{"id":"starter","questions":[{"id":"giant-0","text":"Who built the ark?","options":["Noah","Abraham","Moses","David"],"correct":0,"reference":"Genesis 6:13–22","seconds":30,"points":1},{"id":"giant-1","text":"Who led the Israelites out of Egypt?","options":["Joshua","Moses","Samuel","Solomon"],"correct":1,"reference":"Exodus 3:10","seconds":30,"points":1},{"id":"giant-2","text":"Who defeated Goliath?","options":["Saul","Jonathan","David","Gideon"],"correct":2,"reference":"1 Samuel 17:49–50","seconds":30,"points":1},{"id":"giant-3","text":"Where was Jesus born?","options":["Nazareth","Jerusalem","Bethany","Bethlehem"],"correct":3,"reference":"Matthew 2:1","seconds":30,"points":1},{"id":"giant-4","text":"Who was the mother of Jesus?","options":["Mary","Martha","Elizabeth","Ruth"],"correct":0,"reference":"Luke 1:30–31","seconds":30,"points":1},{"id":"giant-5","text":"Who baptised Jesus?","options":["Peter","John the Baptist","Paul","James"],"correct":1,"reference":"Matthew 3:13–17","seconds":30,"points":1},{"id":"giant-6","text":"What did Jesus turn water into at Cana?","options":["Oil","Milk","Wine","Honey"],"correct":2,"reference":"John 2:1–11","seconds":30,"points":1},{"id":"giant-7","text":"Which disciple denied Jesus three times?","options":["Andrew","Thomas","John","Peter"],"correct":3,"reference":"Luke 22:54–62","seconds":30,"points":1},{"id":"giant-8","text":"Who was thrown into the lions’ den?","options":["Daniel","Joseph","Elijah","Nehemiah"],"correct":0,"reference":"Daniel 6:16","seconds":30,"points":1},{"id":"giant-9","text":"Which prophet was swallowed by a great fish?","options":["Amos","Jonah","Isaiah","Hosea"],"correct":1,"reference":"Jonah 1:17","seconds":30,"points":1},{"id":"giant-10","text":"Who climbed a sycamore tree to see Jesus?","options":["Nicodemus","Bartimaeus","Zacchaeus","Lazarus"],"correct":2,"reference":"Luke 19:1–5","seconds":30,"points":1},{"id":"giant-11","text":"Which man was known for his great strength?","options":["Ezra","Jacob","Aaron","Samson"],"correct":3,"reference":"Judges 16:17","seconds":30,"points":1},{"id":"giant-12","text":"Who interpreted Pharaoh’s dreams in Egypt?","options":["Joseph","Moses","Daniel","Samuel"],"correct":0,"reference":"Genesis 41:14–32","seconds":30,"points":1},{"id":"giant-13","text":"Who was the first king of Israel?","options":["David","Saul","Solomon","Rehoboam"],"correct":1,"reference":"1 Samuel 10:24","seconds":30,"points":1},{"id":"giant-14","text":"Which king asked God for wisdom?","options":["Ahab","Hezekiah","Solomon","Saul"],"correct":2,"reference":"1 Kings 3:5–12","seconds":30,"points":1},{"id":"giant-15","text":"Which city’s walls fell after Israel marched around them?","options":["Nineveh","Babylon","Damascus","Jericho"],"correct":3,"reference":"Joshua 6:20","seconds":30,"points":1},{"id":"giant-16","text":"Who said, “Here am I; send me”?","options":["Isaiah","Jeremiah","Ezekiel","Amos"],"correct":0,"reference":"Isaiah 6:8","seconds":30,"points":1},{"id":"giant-17","text":"Who was Ruth’s mother-in-law?","options":["Deborah","Naomi","Hannah","Sarah"],"correct":1,"reference":"Ruth 1:22","seconds":30,"points":1},{"id":"giant-18","text":"Who was the mother of Samuel?","options":["Rachel","Miriam","Hannah","Esther"],"correct":2,"reference":"1 Samuel 1:20","seconds":30,"points":1},{"id":"giant-19","text":"Which queen helped save her people from Haman’s plan?","options":["Sheba","Vashti","Jezebel","Esther"],"correct":3,"reference":"Esther 7:1–6","seconds":30,"points":1},{"id":"giant-20","text":"Who rebuilt Jerusalem’s wall?","options":["Nehemiah","Ezra","Zerubbabel","Malachi"],"correct":0,"reference":"Nehemiah 6:15","seconds":30,"points":1},{"id":"giant-21","text":"Which disciple doubted until he saw the risen Jesus?","options":["Philip","Thomas","Matthew","Andrew"],"correct":1,"reference":"John 20:24–29","seconds":30,"points":1},{"id":"giant-22","text":"Who betrayed Jesus?","options":["Simon Peter","Barabbas","Judas Iscariot","Nicodemus"],"correct":2,"reference":"Matthew 26:14–16","seconds":30,"points":1},{"id":"giant-23","text":"How many apostles did Jesus choose?","options":["Seven","Ten","Forty","Twelve"],"correct":3,"reference":"Luke 6:13","seconds":30,"points":1},{"id":"giant-24","text":"Who was raised after being in the tomb four days?","options":["Lazarus","Stephen","Jairus","Cornelius"],"correct":0,"reference":"John 11:17, 43–44","seconds":30,"points":1},{"id":"giant-25","text":"Which apostle was a tax collector before following Jesus?","options":["James","Matthew","John","Andrew"],"correct":1,"reference":"Matthew 9:9","seconds":30,"points":1},{"id":"giant-26","text":"Who was known as a seller of purple?","options":["Dorcas","Priscilla","Lydia","Phoebe"],"correct":2,"reference":"Acts 16:14","seconds":30,"points":1},{"id":"giant-27","text":"In which city was Paul born?","options":["Antioch","Ephesus","Rome","Tarsus"],"correct":3,"reference":"Acts 22:3","seconds":30,"points":1},{"id":"giant-28","text":"How many men remained in Gideon’s army?","options":["300","500","1,000","3,000"],"correct":0,"reference":"Judges 7:7","seconds":30,"points":1},{"id":"giant-29","text":"How many times did Naaman dip in the Jordan?","options":["Three","Seven","Ten","Twelve"],"correct":1,"reference":"2 Kings 5:14","seconds":30,"points":1},{"id":"giant-30","text":"Which prophet challenged the prophets of Baal on Mount Carmel?","options":["Elisha","Jeremiah","Elijah","Ezekiel"],"correct":2,"reference":"1 Kings 18:19–39","seconds":30,"points":1},{"id":"giant-31","text":"Which book is the last book of the Bible?","options":["Jude","Acts","Hebrews","Revelation"],"correct":3,"reference":"Revelation","seconds":30,"points":1}],"names":[],"lives":3}</script><script id="giant-runtime">const emptyGiant = () => ({ players: [], startingLives: 3, turn: 0, used: [], status: 'pick', history: [] });
+function restoreGiant(value) { const g = value ?? emptyGiant(); g.players ??= []; g.used ??= []; g.history ??= []; return g; }
+function publicGiant(game) {
+    const g = restoreGiant(game.giant), q = g.question === undefined ? undefined : game.questions[g.question];
+    const { history, ...visible } = g, showAnswer = g.status === 'result' || game.phase === 'winner' || game.phase === 'ended';
+    return { ...visible, poolSize: game.questions.length, ...(q ? { current: { number: g.question + 1, text: q.text, options: q.options, ...(showAnswer ? { correct: q.correct, ...(q.reference ? { reference: q.reference } : {}) } : {}) } } : {}) };
+}
+function validateGiantQuestions(input, offset = 0) {
+    if (!Array.isArray(input) || !input.length || input.length + offset > 300)
+        throw Error('Use 1–300 Bible Giant questions.');
+    return input.map((q, i) => {
+        if (!q || typeof q.text !== 'string' || !q.text.trim() || q.text.length > 500 || !Array.isArray(q.options) || q.options.length !== 4 || q.options.some(o => typeof o !== 'string' || !o.trim() || o.length > 200) || !Number.isInteger(q.correct) || q.correct < 0 || q.correct > 3)
+            throw Error('Bible Giant question ' + (offset + i + 1) + ' needs text, four options and a correct answer.');
+        return { id: 'giant-' + (offset + i), text: q.text.trim(), options: q.options.map(o => o.trim()), correct: q.correct, seconds: 30, points: 1, practice: false, ...(q.reference ? { reference: String(q.reference).slice(0, 120) } : {}) };
+    });
+}
+function applyGiant(game, action, payload, now) {
+    const g = restoreGiant(game.giant);
+    game.giant = g;
+    const remember = () => { game.undo ??= []; game.undo.push(JSON.parse(JSON.stringify({ teams: game.teams, feud: game.feud, phase: game.phase, giant: g }))); game.undo = game.undo.slice(-30); };
+    const running = () => { if (game.phase !== 'giant')
+        throw Error('Start Bible Giant first.'); };
+    switch (action) {
+        case 'giant-roster': {
+            if (game.phase !== 'lobby')
+                throw Error('Set the stage players before starting.');
+            const names = payload.names, lives = Number(payload.lives);
+            if (!Array.isArray(names) || names.length < 2 || names.length > 30 || names.some(n => typeof n !== 'string' || n.trim().length < 2 || n.trim().length > 40) || new Set(names.map(n => String(n).trim().toLocaleLowerCase())).size !== names.length)
+                throw Error('Enter 2–30 different player names, 2–40 characters each.');
+            if (!Number.isInteger(lives) || lives < 1 || lives > 9)
+                throw Error('Choose 1–9 starting lives.');
+            g.startingLives = lives;
+            g.players = names.map((name, i) => ({ id: 'stage-' + i, name: String(name).trim(), lives, correct: 0 }));
+            break;
+        }
+        case 'start':
+            if (game.phase !== 'lobby')
+                throw Error('Game already started.');
+            if (g.players.length < 2)
+                throw Error('Add at least two stage players first.');
+            if (!game.questions.length)
+                throw Error('Add a question pool first.');
+            g.players = g.players.map(p => ({ ...p, lives: g.startingLives, correct: 0 }));
+            g.turn = 0;
+            g.used = [];
+            g.history = [];
+            g.status = 'pick';
+            delete g.question;
+            delete g.selected;
+            delete g.winner;
+            game.phase = 'giant';
+            break;
+        case 'giant-pick': {
+            running();
+            if (g.status !== 'pick')
+                throw Error('Complete the current question first.');
+            const index = Number(payload.index);
+            if (!Number.isInteger(index) || !game.questions[index] || g.used.includes(index))
+                throw Error('Choose an unused question number.');
+            remember();
+            g.question = index;
+            g.used.push(index);
+            delete g.selected;
+            g.status = 'question';
+            break;
+        }
+        case 'giant-select': {
+            running();
+            if (!['question', 'confirm'].includes(g.status))
+                throw Error('Pick a question first.');
+            const option = Number(payload.option);
+            if (!Number.isInteger(option) || option < 0 || option > 3)
+                throw Error('Choose answer A, B, C or D.');
+            remember();
+            g.selected = option;
+            g.status = 'confirm';
+            break;
+        }
+        case 'giant-change':
+            running();
+            if (g.status !== 'confirm')
+                throw Error('No tentative answer.');
+            remember();
+            delete g.selected;
+            g.status = 'question';
+            break;
+        case 'giant-final': {
+            running();
+            if (g.status !== 'confirm' || g.selected === undefined || g.question === undefined)
+                throw Error('Select an answer before confirming it.');
+            const player = g.players[g.turn];
+            if (!player || player.lives <= 0)
+                throw Error('The current player is not active.');
+            remember();
+            const correct = g.selected === game.questions[g.question].correct;
+            if (correct)
+                player.correct++;
+            else
+                player.lives--;
+            g.history.push({ player: player.id, question: g.question, choice: g.selected, correct, lives: player.lives, at: now });
+            g.status = 'result';
+            const remaining = g.players.filter(p => p.lives > 0);
+            if (remaining.length === 1)
+                g.winner = remaining[0].id;
+            break;
+        }
+        case 'giant-next': {
+            running();
+            if (g.status !== 'result')
+                throw Error('Confirm the final answer first.');
+            remember();
+            if (g.winner) {
+                game.phase = 'winner';
+                break;
+            }
+            for (let step = 1; step <= g.players.length; step++) {
+                const next = (g.turn + step) % g.players.length;
+                if (g.players[next].lives > 0) {
+                    g.turn = next;
+                    break;
+                }
+            }
+            g.status = 'pick';
+            delete g.question;
+            delete g.selected;
+            break;
+        }
+        case 'giant-add': {
+            running();
+            if (g.status !== 'pick')
+                throw Error('Add questions between turns.');
+            const extra = validateGiantQuestions(payload.questions, game.questions.length);
+            game.questions.push(...extra);
+            break;
+        }
+        case 'undo': {
+            const previous = game.undo?.at(-1);
+            if (!previous?.giant)
+                throw Error('Nothing to undo.');
+            game.undo.pop();
+            game.giant = previous.giant;
+            game.phase = previous.phase;
+            break;
+        }
+        case 'end':
+            game.phase = 'ended';
+            break;
+        default: throw Error('This action is not available in Bible Giant.');
+    }
+}
+</script><script>
+const config=JSON.parse(document.getElementById('giant-data').textContent),key='congress-bible-giant-offline-'+config.id;
+function fresh(){return {mode:'bible-giant',name:'Bible Giant',phase:'lobby',questions:config.questions,giant:emptyGiant(),teams:[],feud:{},undo:[]};}
+let game;try{game=JSON.parse(localStorage.getItem(key))||fresh();game.giant=restoreGiant(game.giant);}catch{game=fresh();}
+const el=id=>document.getElementById(id);el('names').value=(config.names||[]).join('\n');el('lives').value=config.lives||3;
+function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+function action(label,fn,cls){const b=node('button',label,cls);b.onclick=fn;return b;}
+function run(command,payload={}){try{const draft=JSON.parse(JSON.stringify(game));applyGiant(draft,command,payload,Date.now());game=draft;try{localStorage.setItem(key,JSON.stringify(game));}catch{}el('error').textContent='';render();}catch(e){el('error').textContent=e.message;}}
+function render(){const g=game.giant,p=g.players[g.turn],q=g.question===undefined?null:game.questions[g.question],scene=el('scene');scene.replaceChildren();el('setup').hidden=game.phase!=='lobby';el('turn').textContent=game.phase==='lobby'?'Enter your stage players':game.phase==='winner'?'Our Bible Giant: '+g.players.find(p=>p.id===g.winner).name:game.phase==='ended'?'Game ended':p.name+' · '+p.lives+' lives';
+ if(game.phase==='giant'){
+  if(g.status==='pick'){scene.append(node('p','Pick an unused question number.','feedback'));const grid=node('div',undefined,'numbers host-controls');game.questions.forEach((q,i)=>{const b=action(String(i+1),()=>run('giant-pick',{index:i}));b.disabled=g.used.includes(i);grid.append(b);});scene.append(grid);if(g.used.length===game.questions.length)scene.append(node('p','The pool is finished. Export your game and prepare extra questions below to continue.','feedback'));}
+  else{scene.append(node('h2',q.text));const options=node('div',undefined,'options');q.options.forEach((text,i)=>{let cls=g.selected===i?'selected ':'';if(g.status==='result')cls+=q.correct===i?'correct':g.selected===i?'incorrect':'';const b=action('ABCD'[i]+': '+text,()=>run('giant-select',{option:i}),cls);b.disabled=g.status==='result';options.append(b);});scene.append(options);
+   if(g.status==='confirm'){scene.append(node('p','Is that your final answer?','feedback'));const controls=node('div',undefined,'actions host-controls');controls.append(action('Choose another',()=>run('giant-change')),action('Yes, final answer',()=>run('giant-final'),'primary'));scene.append(controls);}
+   if(g.status==='result'){scene.append(node('p',g.history[g.history.length-1].correct?'Correct answer!':p.lives?'One life lost. Keep going!':'Out of lives.','feedback'));if(q.reference)scene.append(node('p',q.reference,'feedback'));scene.append(action(g.winner?'Celebrate winner':'Next player',()=>run('giant-next'),'primary host-controls'));}
+  }
+ }
+ const roster=el('roster');roster.replaceChildren();g.players.forEach(p=>roster.append(node('span',p.name+' · '+p.lives+' lives · '+p.correct+' correct',p.lives<=0?'out':'')));el('undo').disabled=!game.undo.length;el('extra-pool').hidden=game.phase!=='giant'||g.status!=='pick';
+}
+el('start').onclick=()=>{run('giant-roster',{names:el('names').value.split('\n').map(n=>n.trim()).filter(Boolean),lives:Number(el('lives').value)});if(game.giant.players.length>=2)run('start');};
+el('extra-file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());run('giant-add',{questions:Array.isArray(data)?data:data.questions||data.game?.questions});}catch(error){el('error').textContent=error.message;}};el('undo').onclick=()=>run('undo');el('end').onclick=()=>{if(confirm('End this offline game?'))run('end');};el('reset').onclick=()=>{if(confirm('Start a new offline game? Export the current result first.')){game=fresh();try{localStorage.removeItem(key);}catch{}render();}};
+el('export').onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(game,null,2)],{type:'application/json'}));a.href=url;a.download='bible-giant-offline-results.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};el('toggle').onclick=()=>{document.body.classList.toggle('hide-controls');el('toggle').textContent=document.body.classList.contains('hide-controls')?'Show host controls':'Hide host controls';};render();
+</script></body></html>

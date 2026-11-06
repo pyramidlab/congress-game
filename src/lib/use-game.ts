@@ -16,7 +16,7 @@ export function useGame(pin:string,demo:boolean,host=false){
   const patch=(p:Partial<GameView>)=>{if(live)setView(v=>({...v,...p}));};
   if(!/^\d{6}$/.test(pin)){patch({loading:false});return;}
   if(demo){
-   import('./demo').then(d=>{if(!live)return;stops.push(d.demoSubscribe(s=>{const v=d.demoView(s,d.demoUid());patch({game:v.publicGame,privateGame:host?v.privateGame:null,member:v.member,members:host?Object.values(s.members):[],result:v.results[d.demoUid()]??null,submission:v.submission,count:v.count,connected:true,loading:false,error:''});}));});
+   import('./demo').then(d=>{if(!live)return;stops.push(d.demoSubscribe(pin,s=>{const v=d.demoView(s,d.demoUid());patch({game:v.publicGame,privateGame:host?v.privateGame:null,member:v.member,members:host?Object.values(s.members):[],result:v.results[d.demoUid()]??null,submission:v.submission,count:v.count,connected:true,loading:false,error:''});}));});
   }else if(!configured){patch({loading:false,error:'Live play is not connected yet. Please check with the organiser.'});}
   else{
    firebaseClient().then(async c=>{
@@ -75,11 +75,11 @@ export function useGame(pin:string,demo:boolean,host=false){
   });return()=>{live=false;stop?.();};
  },[pin,demo,view.member?.uid,view.member?.removed]);
  const join=useCallback(async(name:string,campus:string)=>{
-  if(demo){const d=await import('./demo');return d.demoJoin(name,campus);}
+  if(demo){const d=await import('./demo');return d.demoJoin(pin,name,campus);}
   const c=await firebaseClient();await callable('joinGame')({pin,name,campus});
  },[pin,demo]);
  const answer=useCallback(async(option:number)=>{
-  if(demo){const d=await import('./demo');return d.demoAnswer(option);}
+  if(demo){const d=await import('./demo');return d.demoAnswer(pin,option);}
   const c=await firebaseClient(),r=view.game?.round;if(!r)throw new Error('No question is open.');
   const path=ref(c.db,'answers/'+pin+'/'+r.attempt+'/'+c.auth.currentUser!.uid);
   pendingAnswers.current.add(r.attempt);
@@ -91,7 +91,7 @@ export function useGame(pin:string,demo:boolean,host=false){
   }finally{pendingAnswers.current.delete(r.attempt);}
  },[pin,demo,view.game?.round]);
  const command=useCallback(async(action:string,payload:Record<string,unknown>={})=>{
-  if(demo){const d=await import('./demo');return d.demoCommand(action,payload);}
+  if(demo){const d=await import('./demo');return d.demoCommand(pin,action,payload);}
   const c=await firebaseClient();await callable('hostCommand')({pin,action,payload,revision:view.privateGame?.revision,requestId:crypto.randomUUID()});
  },[pin,demo,view.privateGame?.revision]);
  return {...view,join,answer,command,reconnect:()=>setRefresh(n=>n+1)};

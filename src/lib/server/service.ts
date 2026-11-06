@@ -14,7 +14,7 @@ async function backupIfNeeded(s:Snapshot){
  if(!['podium','winner','ended'].includes(s.game.phase))return;
  const previous=(await db.ref('backups/'+s.game.pin).get()).val();if(previous?.revision===s.game.revision&&previous.ok)return;
  const out=exportsFor(s),path='backupFiles/'+s.game.pin+'/'+s.game.revision;
- const files=[{name:'players.csv',type:'text/csv',content:out.players},{name:'campuses.csv',type:'text/csv',content:out.campuses},{name:'game.json',type:'application/json',content:JSON.stringify(clean(s))}];
+ const files=[{name:'players.csv',type:'text/csv',content:out.players},{name:s.game.mode==='bible-giant'?'summary.csv':'campuses.csv',type:'text/csv',content:out.campuses},{name:'game.json',type:'application/json',content:JSON.stringify(clean(s))}];
  await db.ref().update({[path]:files,['backups/'+s.game.pin]:{ok:true,revision:s.game.revision,at:Date.now(),path}});
 }
 async function publishMembership(pin:string){
@@ -90,7 +90,8 @@ export async function createGame(r:ServiceRequest){
   if(r.data?.sourcePin){source=(await db.ref('games/'+pinOf(r.data.sourcePin)).get()).val();if(!source)throw new Error('Game not found.');}
   const content=source?validateContent(source):undefined;
   for(let i=0;i<10;i++){
-   const pin=String(randomInt(100000,1000000)),g=newGame(pin,String(r.data?.name??event.name));
+   const mode=content?.mode??r.data.mode??'quiz';if(!['quiz','bible-giant'].includes(mode))throw new ServiceError('invalid-argument','Choose a quiz or Bible Giant game.');
+   const pin=String(randomInt(100000,1000000)),g=newGame(pin,String(r.data?.name??event.name),mode);
    if((await db.ref('deletedGames/'+pin).get()).exists())continue;
    if(content)Object.assign(g,content);
    g.createdBy=uid;g.createdAt=Date.now();
@@ -99,7 +100,7 @@ export async function createGame(r:ServiceRequest){
    // A retired PIN is never reused, including when creation races deletion.
    if((await db.ref('deletedGames/'+pin).get()).exists()){await db.ref('games/'+pin).remove();continue;}
    await publish({game:g,members:{},answers:{}});
-   await db.ref('hosts/'+uid+'/rooms/'+pin).set({pin,name:g.name,createdAt:g.createdAt,phase:g.phase});return {pin};
+   await db.ref('hosts/'+uid+'/rooms/'+pin).set({pin,name:g.name,mode:g.mode,createdAt:g.createdAt,phase:g.phase});return {pin};
   }
   throw new Error('Could not reserve a PIN. Retry.');
  }catch(e){userError(e);}
@@ -109,7 +110,7 @@ export async function hostLibrary(r:ServiceRequest){
  try{
   if(r.data?.action==='save'){
    const content=validateContent(r.data.content),entry=root.child('templates').push();
-   await entry.set({name:content.name,createdAt:Date.now(),content});return {id:entry.key};
+   await entry.set({name:content.name,mode:content.mode,createdAt:Date.now(),content});return {id:entry.key};
   }
   if(r.data?.action==='delete'){
    const id=String(r.data.id??'');if(!/^[A-Za-z0-9_-]{1,80}$/.test(id))throw new Error('Choose a question set.');
@@ -145,6 +146,7 @@ export async function joinGame(r:ServiceRequest){
   if(existing.exists()){if(existing.val().removed)throw new Error('The host has removed this player.');await publishMembership(pin);return {player:existing.val()};}
   const gameSnap=await db.ref('games/'+pin).get();if(!gameSnap.exists())throw new Error('Game not found. Check the PIN.');
   const g=hydrate(gameSnap.val());
+  if(g.mode==='bible-giant')throw new Error('Bible Giant is a host-led stage game. Watch the big screen.');
   if(g.phase!=='lobby'&&!(g.phase==='question'&&g.allowLate))throw new Error('Game already started.');
   const rateNow=Date.now(),ip=createHash('sha256').update(r.rawRequest.ip??'unknown').digest('hex').slice(0,24);
   for(const [key,limit] of [[uid,10],['ip-'+ip,600]] as [string,number][]){
@@ -182,6 +184,7 @@ export async function hostCommand(r:ServiceRequest){
   if(action==='save'){
    if(s.game.phase!=='lobby')throw new Error('Content is locked once the game starts. Create a new game to change questions.');
    const c=validateContent(payload);const members=Object.values(s.members);
+   if(c.mode!==s.game.mode)throw new Error('Create a new game to choose a different game type.');
    if(members.some(p=>!p.removed&&!c.campuses.includes(p.campus)))throw new Error('A joined player belongs to a campus you removed.');
    Object.assign(s.game,c);s.game.revision++;
   }else if(action==='remove'||action==='rename'){

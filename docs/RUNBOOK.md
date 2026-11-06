@@ -1,33 +1,36 @@
-# Operator runbook
+# Congress operator runbook
 
-## Before the event
+## Choose a game
 
-- Connect Firebase and deploy the frontend using SETUP.md. Test a host account, a second operator and automatic question reveal.
-- Replace all sample quiz questions. Use the question CSV template in the host dashboard or enter questions manually. Confirm the correct options, one practice question, ten scored questions, time limits and base points.
-- Check campus names and the number of top players used for campus totals. Review the eight starter survey rankings with the organisers and replace them if needed.
-- Create the event. Changes are allowed in the lobby, then locked. Keep the PIN and host account ready on the spare laptop.
-- Download the offline board **from this session's host dashboard** after the survey edits. Open the downloaded HTML with Wi-Fi disconnected, and check the question list. Keep a manual results export as well.
-- Test at least 30 physical phones through ten questions, including refreshing and reopening the same browser. A second browser or cleared storage is a new identity. Test duplicate names, pause, replay and the campus board. Confirm the Auth quota for a shared venue IP.
-- Rehearse on the actual network with slow/dropped connections. A sending answer is not accepted until the phone says locked in. Server receipt determines speed; use longer question times or accuracy scoring if network differences dominate. Score mode is chosen before starting.
-- Check QR scanning, 16:9 projector readability from the back, sound opt-in/mute and a spare hotspot. Select the display's contrast mode that works best on the projector.
+The host desk creates two independent game types: **Campus quiz** and **Who Wants to Be a Bible Giant**. The survey game has been removed. Existing saved quiz content and results remain available.
 
-## The one-hour show
+## Campus quiz
 
-1. **8 minutes lobby + 1 minute practice:** project `/display?pin=PIN`. Share the QR and short link. Host operates `/host?pin=PIN` in a different window. Start once the room is ready. Practice awards no points.
-2. **14 minutes quiz:** reveal at the deadline, explain the answer, show the leaderboard, then continue. Campus totals default on the leaderboard after scored questions 5 and 10; the host can select players or campuses explicitly. Keep roughly 80 seconds per question including explanation.
-3. **5 minutes top eight:** announce the podium and eight finalists. Pair 1+8, 2+7, 3+6, 4+5. Open team review to replace absent players by name and edit team names before starting showdown.
-4. **16 minutes semi-finals:** Team 1 vs 4, then Team 2 vs 3. Use surveys 1–2 and 3–4 respectively, two rounds per match at 1×. Host chooses control after the face-off, flips accepted answers, and adds strikes. At three strikes give the other team one spoken steal attempt. Award the revealed round points once to the winner. Load the next survey. Advance only after the second round.
-5. **10 minutes final:** winners play surveys 5–7 at 1×, 2× and 3×. Load each survey after awarding the previous one. If totals tie, load the spare sudden-death survey, hear both answers, reveal the host-selected winner's accepted answer and award that round. Advance to celebrate.
-6. **5 minutes celebration + 1 minute buffer:** announce the winning pair and campus. Export both result CSVs, and verify the backup success notice.
+Edit the quiz questions, correct options, timers, points, campuses and scoring before starting. Players join by PIN on their phones. Start with practice, then run the scored questions and individual/campus leaderboards. Pause, resume, replay or skip as needed. The quiz ends at its podium; it does not select or pair contestants for another game. Export results before deleting a session.
 
-## Recovery
+## Who Wants to Be a Bible Giant
 
-- **One player disconnects:** ask them to reopen the same browser and link. Their score and membership return. Do not accept a second username as a replacement for their identity.
-- **Many players lose the question:** pause if the timer is running. Replay the question after connectivity returns; replay voids the previous attempt and its points for everyone. Use a fresh attempt, never manually add points from cached answers.
-- **Host refreshes:** reopen the same PIN and sign in if required. State is in Firebase. Two operators should coordinate verbally; stale commands are rejected rather than overwriting each other.
-- **Timer reaches zero without reveal:** late answers are still blocked. Use manual reveal and check that the host/display remain connected.
-- **Host misclicks:** survey Undo restores the previous board and scores. Manual match-total correction is available. A quiz replay discards the entire current attempt; a skip discards it and advances.
-- **Internet/server outage:** stop the phone quiz. Keep the current online score export if available. Open the downloaded offline board, name the teams, run surveys manually and export its JSON match record. It works without internet; it does not update the live bracket or online scores. Use a written bracket and the score correction controls as needed.
-- **Backup failure:** download manual player and campus CSVs immediately. The host shows backup status; database results still exist independently of the backup files.
+1. Select this game type when creating a session. Open its projector display.
+2. Enter 2–30 stage player names, one per line, and choose 1–9 starting lives (default three). Save the roster.
+3. Review/edit the numbered question pool. A 32-question Bible starter pool is included, with references. JSON question sets and CSV imports are supported. Add enough questions for the event; the host may append more between turns.
+4. Start the game. The host operates all controls; stage players do not register on phones and need no previous quiz qualification.
+5. Ask the current player to call an unused number, then select it. The question and four answers appear on the projector. Unpicked questions and correct answers remain private.
+6. Select the player's proposed answer. The screen asks **Is that your final answer?** Choose another if needed. Only **Yes, final answer** grades the choice.
+7. Correct answers preserve lives and increase the correct-answer count. Wrong answers remove one life. A player remains in the game while they have lives. Press **Next player**; turns skip anyone with no lives.
+8. Numbers cannot be reused. If the pool is exhausted, append questions from the host controls and continue. The game never selects an arbitrary winner because the pool ran out.
+9. When one player remains, show the last result and press **Celebrate winner**. Use Undo turn action to correct an operator mistake before continuing.
+10. Export stage results and the turn-by-turn answer history. Verify the automatic backup. End the session before deleting it from Recent games.
 
-Do not clear browser storage during the event. Keep a second operator, a charged spare device, the offline HTML and a written run of show available.
+Turns are host-paced and untimed. Existing quiz countdown sounds continue to work. Bible Giant uses confirmation, correct-answer, life-loss and winner cues. Enable sound from the projector's **Sound off** button, and test volume before the event.
+
+## Demos
+
+Quiz: `/host?demo=1&pin=482913`. Bible Giant: `/host?demo=1&pin=482914`. Open the display from the same browser to share demo state. Bible Giant demo includes three sample stage players. Local demo changes do not affect live sessions.
+
+## Offline and connection recovery
+
+- Reopen the same PIN after a host refresh and sign in if required. Game state and tentative answers survive a reconnect. Revision checks protect against two operators making conflicting changes.
+- For the phone quiz, reopen the same browser to preserve identity. A Sending answer is not accepted until confirmed. Late reconnection does not extend a deadline. Use correctness-only scoring where connection differences matter.
+- Download the offline Bible Giant HTML from its own host dashboard after editing the question pool. It embeds that pool, stage roster, starting lives and the shared rules engine. Open it with Wi-Fi disabled before the event. It has no network or external asset dependencies.
+- The offline game works independently: enter/review the roster, pick numbers, confirm final answers, lose lives, rotate players, undo mistakes and celebrate the winner. Import extra question-set JSON between turns if needed. Export its JSON results. It does not sync offline changes into an online game.
+- Keep a spare laptop, a manual result export and an organiser-approved question pool. Rehearse the actual projector, sound and venue network. For 200 phone-quiz connections, verify Firebase Blaze and the venue's Auth sign-up quota; do a real-phone rehearsal.
