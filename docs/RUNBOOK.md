@@ -21,7 +21,7 @@ Edit the quiz questions, correct options, timers, points, campuses and scoring b
 9. When one player remains, show the last result and press **Celebrate winner**. Use Undo turn action to correct an operator mistake before continuing.
 10. Export stage results and the turn-by-turn answer history. Verify the automatic backup. End the session before deleting it from Recent games.
 
-Turns are host-paced and untimed. Existing quiz countdown sounds continue to work. Bible Giant uses confirmation, correct-answer, life-loss and winner cues. Enable sound from the projector's **Sound off** button, and test volume before the event.
+Turns are host-paced and untimed. Existing quiz countdown sounds continue to work. Bible Giant has original quiz-show-style question, final-answer, correct-answer, life-loss and winner cues. A quiet suspense background loops while a question or tentative answer is shown, then fades out at the result. Enable sound from the projector's **Sound off** button. In **Sound options**, adjust volume, toggle **Suspense background**, preview the sequence between turns, or download the fourteen-clip WAV pack. Muting stops all playback immediately. Use sound on just one projector tab to avoid echoes, and rehearse with the venue speakers.
 
 ## Demos
 

@@ -1,4 +1,4 @@
-# Verification — 5 November 2026
+# Verification — 6 November 2026
 
 The final architecture is phone/host/projector → Next.js server routes on Vercel → Firebase Auth and Realtime Database. Answer receipt goes directly through strict Firebase rules and server timestamps; server routes compute scores and control the board.
 
@@ -25,3 +25,5 @@ The Windows environment needed temporary package-extraction/directory-creation w
 Keep the host and projector open for automatic reveal requests. Server deadlines reject late answers even during a complete interruption. Download and test the session's offline HTML before the venue rehearsal. For 200 live connections, verify the Firebase Blaze plan and the event's Auth sign-up quota.
 
 The survey and seeded-team stages have been replaced by a separate, host-led **Who Wants to Be a Bible Giant** game type. Quiz and Bible Giant have independent demo rooms (482913 and 482914). The generated offline Bible Giant HTML embeds the same TypeScript rules as the server; executing its compiled runtime verified final-answer confirmation, life loss and the last-player winner. This new interface has build/type checks and emulator integration coverage; browser automation remains blocked by the saved access setting, so a manual projector rehearsal is still needed.
+
+Bible Giant audio follows the public game state on the projector: host picks a number → question cue and one looping suspense source → tentative answer cue → final result cue and background fade → winner fanfare. AudioContext is created only on an enable/preview click. Eight audio tests cover deadline beats, silent reconnects, distinct stage cues, loop eligibility, finite peak-limited PCM, quiet loop boundaries, one continuous source across repeated updates, buffer reuse, mute/disposal and suspended-context silence. All 34 unit tests pass. Fourteen WAVs and the ZIP are generated from the same original synthesis code as playback; no audio network requests are needed in play. Browser listening remains unverified because of the saved browser restriction; a downloadable preview is provided for manual listening and venue speaker checks.

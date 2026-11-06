@@ -1,9 +1,10 @@
 import type {PublicGame} from './types';
 import type {GiantState} from './core/giant';
-export const soundNames=['tick','urgent','time-up','reveal','strike','winner','countdown-preview'] as const;
+export const soundNames=['tick','urgent','time-up','reveal','strike','winner','countdown-preview','question-open','suspense-bed','final-answer','giant-correct','giant-wrong','giant-winner','giant-preview'] as const;
 export type GameSound=typeof soundNames[number];
 export const soundRate=22050;
-const duration:Record<GameSound,number>={tick:.085,urgent:.095,'time-up':1.1,reveal:.65,strike:.4,winner:2.1,'countdown-preview':6.15};
+const duration:Record<GameSound,number>={tick:.085,urgent:.095,'time-up':1.1,reveal:.65,strike:.4,winner:2.1,'countdown-preview':6.15,'question-open':1.3,'suspense-bed':8,'final-answer':1.6,'giant-correct':1.7,'giant-wrong':1.4,'giant-winner':3.6,'giant-preview':16.8};
+export const soundFiles:Record<GameSound,string>={tick:'01-countdown-tick.wav',urgent:'02-final-five-tick.wav','time-up':'03-time-up.wav',reveal:'04-answer-reveal.wav',strike:'05-life-lost.wav',winner:'06-winner.wav','countdown-preview':'07-countdown-preview.wav','question-open':'08-question-reveal.wav','suspense-bed':'09-suspense-loop.wav','final-answer':'10-final-answer.wav','giant-correct':'11-correct-answer.wav','giant-wrong':'12-wrong-answer.wav','giant-winner':'13-bible-giant-winner.wav','giant-preview':'14-bible-giant-preview.wav'};
 
 /** Original, deterministic sounds; no audio downloads are needed for playback. */
 export function soundSamples(name:GameSound,rate=soundRate):Float32Array<ArrayBuffer>{
@@ -30,10 +31,33 @@ export function soundSamples(name:GameSound,rate=soundRate):Float32Array<ArrayBu
   [523.25,659.25,783.99,1046.5].forEach((hz,i)=>note(i*.16,.38,hz,.28,true));
   [523.25,659.25,783.99,1046.5].forEach(hz=>note(.82,1.25,hz,.16,true));
   [0,.32,.64,.82].forEach(at=>note(at,.16,65.4,.24));
- }else{
+ }else if(name==='countdown-preview'){
   const mix=(clip:Float32Array,at:number)=>{const start=Math.round(at*rate);for(let i=0;i<clip.length&&start+i<data.length;i++)data[start+i]+=clip[i];};
   const tick=soundSamples('urgent',rate);for(let i=0;i<10;i++)mix(tick,i*.5);
   mix(soundSamples('time-up',rate),5);
+ }else if(name==='suspense-bed'){
+  // An original minor/ninth pad and soft pulse; both edges fade to zero for looping.
+  for(let i=0;i<data.length;i++){
+   const t=i/rate,edge=Math.max(0,Math.min(1,t/.12,(8-t)/.12)),pulse=.72+.28*Math.cos(2*Math.PI*2*t);
+   data[i]=edge*pulse*(.075*Math.sin(2*Math.PI*73.416*t)+.045*Math.sin(2*Math.PI*110*t)+.025*Math.sin(2*Math.PI*146.832*t)+.017*Math.sin(2*Math.PI*164.814*t));
+  }
+  [146.832,164.814,220,174.614].forEach((hz,j)=>{for(let i=0;i<4;i++)note(i*2+j*.5,.28,hz,.035);});
+ }else if(name==='question-open'){
+  note(0,1.15,73.416,.3,true);[293.664,349.228,440,587.328].forEach((hz,i)=>note(i*.09,.8,hz,.2,true));
+ }else if(name==='final-answer'){
+  note(0,1.5,73.416,.3,true);note(.28,1.2,110,.2,true);note(.5,1,311.127,.18);note(.62,.85,622.254,.16,true);
+ }else if(name==='giant-correct'){
+  [293.664,369.994,440,587.328].forEach((hz,i)=>note(i*.12,.8,hz,.3,true));[293.664,369.994,440,880].forEach(hz=>note(.65,1,hz,.13,true));
+ }else if(name==='giant-wrong'){
+  [196,184.997,146.832].forEach((hz,i)=>note(i*.18,.7,hz,.3,true));note(.25,1.1,73.416,.26,true);note(.55,.75,155.563,.13);
+ }else if(name==='giant-winner'){
+  [293.664,369.994,440,587.328,659.256,587.328,880].forEach((hz,i)=>note(i*.16,.65,hz,.25,true));
+  [146.832,293.664,369.994,440,587.328].forEach(hz=>note(1.3,2.25,hz,.17,true));[0,.32,.64,.96,1.3].forEach(at=>note(at,.2,65.4,.3));
+ }else if(name==='giant-preview'){
+  const mix=(clip:Float32Array,at:number)=>{const start=Math.round(at*rate);for(let i=0;i<clip.length&&start+i<data.length;i++)data[start+i]+=clip[i];};
+  mix(soundSamples('question-open',rate),0);
+  const bed=soundSamples('suspense-bed',rate).slice(0,rate*5);for(let i=0;i<bed.length;i++)bed[i]*=.5*Math.min(1,(bed.length-i)/(rate*.2));mix(bed,1.3);
+  mix(soundSamples('final-answer',rate),6.8);mix(soundSamples('giant-correct',rate),8.8);mix(soundSamples('giant-wrong',rate),10.8);mix(soundSamples('giant-winner',rate),13);
  }
  let peak=0;for(const sample of data)peak=Math.max(peak,Math.abs(sample));
  if(peak>.75)for(let i=0;i<data.length;i++)data[i]*=.75/peak;
@@ -45,19 +69,21 @@ export function countdownBeat(remainingMs:number){
  const urgent=remainingMs<=5000,interval=urgent?500:1000;
  return {key:(urgent?'urgent:':'tick:')+Math.ceil(remainingMs/interval),sound:urgent?'urgent' as const:'tick' as const};
 }
-type Signal=Pick<PublicGame,'pin'|'phase'|'round'|'feud'> & {giant?:Pick<GiantState,'status'|'selected'|'players'|'turn'>};
+type Signal=Pick<PublicGame,'pin'|'phase'|'round'|'feud'> & {mode?:PublicGame['mode'];giant?:Pick<GiantState,'status'|'selected'|'players'|'turn'|'question'>};
+export function suspenseActive(game:Signal|null){return !!(game?.phase==='giant'&&game.giant&&['question','confirm'].includes(game.giant.status));}
 export function changedSound(before:Signal|null,after:Signal,now:number):GameSound|null{
  // Reconnecting or enabling audio must not replay historical results.
  if(!before||before.pin!==after.pin)return null;
  if(before.phase!==after.phase){
-  if(after.phase==='winner'||after.phase==='podium')return 'winner';
+  if(after.phase==='winner'||after.phase==='podium')return after.mode==='bible-giant'?'giant-winner':'winner';
   if(after.phase==='reveal')return before.phase==='question'&&now>=(before.round?.endsAt??Infinity)?'time-up':'reveal';
  }
  if(before.phase==='giant'&&after.phase==='giant'&&before.giant&&after.giant){
-  if(after.giant.status==='confirm'&&(before.giant.status!=='confirm'||before.giant.selected!==after.giant.selected))return 'urgent';
+  if(after.giant.status==='question'&&before.giant.question!==after.giant.question)return 'question-open';
+  if(after.giant.status==='confirm'&&(before.giant.status==='question'||before.giant.status==='confirm'&&before.giant.selected!==after.giant.selected))return 'final-answer';
   if(after.giant.status==='result'&&before.giant.status!=='result'){
    const player=after.giant.players[after.giant.turn],previous=before.giant.players.find(p=>p.id===player?.id);
-   return player&&previous&&player.lives<previous.lives?'strike':'reveal';
+   return player&&previous&&player.lives<previous.lives?'giant-wrong':'giant-correct';
   }
  }
  if(before.phase==='feud'&&after.phase==='feud'){

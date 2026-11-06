@@ -18,7 +18,7 @@ Choose **Who Wants to Be a Bible Giant** when creating a game. Enter stage playe
 
 ## Game sounds
 
-On the projector display, click **Sound off** to enable local audio. **Sound options** provides volume, a final-countdown preview and a downloadable ZIP of seven original WAV clips. Normal ticks play once per second; the final five seconds use two ticks per second, followed by a time-up cue. Quiz reveals, Bible Giant final-answer confirmation and life loss, the podium and winners have separate cues. Pausing stops the countdown and muting stops current playback. Player phones remain silent.
+On the projector display, click **Sound off** to enable local audio. **Sound options** provides volume, a preview for the current game type and a downloadable ZIP of fourteen original WAV clips. Normal quiz ticks play once per second; the final five seconds use two ticks per second, followed by a time-up cue. Bible Giant has original quiz-show-style question, final-answer, correct, wrong and winner cues, plus a quiet suspense loop while the player considers or confirms an answer. The **Suspense background** checkbox can disable that loop while keeping the cues. It stops at the result or between turns. These are original sounds, not recordings from Who Wants to Be a Millionaire. Pausing stops the quiz countdown and muting stops all current playback. Player phones remain silent.
 
 Playback is synthesized locally without streaming or fetching audio files. Downloads are optional. The build generates `/sounds/congress-game-sounds.zip` and individual WAV clips with `scripts/generate-sounds.ts`; these generated assets are excluded from Git. A click is required to enable sound after opening or refreshing the projector page.
 
